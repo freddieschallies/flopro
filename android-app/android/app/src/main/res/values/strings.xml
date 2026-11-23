@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FloPro Jobs</string>
-    <string name="title_activity_main">FloPro Jobs</string>
+    <string name="app_name">FloPro Plumbing</string>
+    <string name="title_activity_main">FloPro Plumbing</string>
     <string name="package_name">za.co.flopro.jobcards</string>
     <string name="custom_url_scheme">za.co.flopro.jobcards</string>
 </resources>

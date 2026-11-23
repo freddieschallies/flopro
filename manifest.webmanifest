@@ -1,6 +1,6 @@
 {
   "name": "FloPro Plumbing — Job Cards",
-  "short_name": "FloPro Jobs",
+  "short_name": "FloPro Plumbing",
   "description": "Job cards, quotes and invoices for FloPro Plumbing",
   "start_url": "./",
   "scope": "./",
