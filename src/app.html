@@ -207,7 +207,13 @@ function upsertFromJob(j){if(!j.cust.trim())return;let c=j.custId&&cust(j.custId
 let tt;function toast(m){document.querySelector('.toast')?.remove();const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);clearTimeout(tt);tt=setTimeout(()=>t.remove(),2600)}
 
 /* ---------- storage (IndexedDB on this phone) ---------- */
-let natP;const native=()=>{if(natP===undefined){const C=window.Capacitor;natP=C?.isNativePlatform?.()&&C.registerPlugin?C.registerPlugin('FloPro'):null}return natP};
+/* Native FloPro plugin (APK only). Talks straight to Capacitor's bridge, which has no registerPlugin without a bundler. */
+let natP;const native=()=>{if(natP)return natP;const C=window.Capacitor;
+ if(!C?.isNativePlatform?.()||!C.nativePromise)return null;
+ natP={print:o=>C.nativePromise('FloPro','print',o||{}),shareFile:o=>C.nativePromise('FloPro','shareFile',o||{}),info:()=>C.nativePromise('FloPro','info',{}),
+  getText:o=>C.nativePromise('FloPro','getText',o||{}),canInstall:()=>C.nativePromise('FloPro','canInstall',{}),installUpdate:o=>C.nativePromise('FloPro','installUpdate',o||{}),
+  addListener:async(ev,cb)=>C.addListener?C.addListener('FloPro',ev,cb):{remove(){}}};
+ return natP};
 const mem=new Map();let idb=null;
 function openDB(){return new Promise(res=>{try{const r=indexedDB.open('flopro-jobcards',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{idb=r.result;res()};r.onerror=()=>res();r.onblocked=()=>res()}catch(e){res()}})}
 function tx(mode,fn){return new Promise((res,rej)=>{const t=idb.transaction('kv',mode),r=fn(t.objectStore('kv'));t.oncomplete=()=>res(r?.result);t.onerror=()=>rej(t.error)})}
@@ -594,7 +600,8 @@ main.addEventListener('change',async e=>{const t=e.target,j=job(S.id);
    Website (if ever hosted): checks version.json and reloads. Saved data is never touched. */
 const REPO='freddieschallies/flopro';
 const isNative=()=>!!native();
-const live=!isNative()&&!BUILD.startsWith('__')&&(location.protocol==='https:'||location.hostname==='localhost')&&window.self===window.top;
+const inApp=()=>isNative()||/^https?:\/\/localhost$/.test(location.origin)&&!!window.androidBridge;
+const isLive=()=>!inApp()&&!BUILD.startsWith('__')&&(location.protocol==='https:'||location.hostname==='localhost')&&window.self===window.top;
 let swReg=null,updShown=false,upd=null,lastCheck=0,appInfo=null;
 async function info(){if(appInfo)return appInfo;try{appInfo=await native().info()}catch(e){appInfo={version:'?',build:0}}return appInfo}
 async function checkUpdate(manual){
@@ -608,7 +615,7 @@ async function checkUpdate(manual){
   if(n&&url){if(n>+me.build){upd={url,ver:'1.0.'+n};showUpdate(`New version ${upd.ver} is ready.`)}else if(manual)toast(`You have the latest version (${me.version})`)}
   else if(manual)toast(why==='offline'?'No internet — connect and try again':why==='busy'?'GitHub is busy — try again in a little while':'Could not check for updates — try again later');
   return}
- if(!live){if(manual)toast('Updates come through the FloPro Jobs app');return}
+ if(!isLive()){if(manual)toast(inApp()?'Could not reach the app’s update service — reopen the app and try again':'Updates come through the FloPro Plumbing app');return}
  try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});const v=await r.json();
   if(v.build&&v.build!==BUILD){const busy=['job','doc','cust','jobcard','part'].includes(S.view)||document.querySelector('.ov');if(busy||manual)showUpdate('A new version of the app is ready.');else applyUpdate()}
   else if(manual)toast('You have the latest version')}catch(e){if(manual)toast('No internet — try again later')}}
@@ -620,7 +627,7 @@ async function applyUpdate(){await flush();
   catch(e){const m=String(e?.message||e);if(s)s.textContent=m.includes('NEED_PERMISSION')?'Allow FloPro Jobs to install apps, then come back and tap Update now.':'Download failed — check internet and try again.'}
   finally{if(b)b.disabled=false;h?.remove?.()}return}
  toast('Updating…');try{if(swReg)await swReg.update();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()}
-if(live&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{});
+if(isLive()&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()});
 setInterval(()=>checkUpdate(),30*60*1000);
 addEventListener('pagehide',()=>{flush()});
