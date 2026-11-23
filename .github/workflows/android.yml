@@ -57,6 +57,11 @@ jobs:
           ./gradlew --no-daemon assembleRelease
           cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/FloPro-Jobs.apk"
 
+      - name: Version file the app checks for updates
+        run: |
+          echo "{\"code\": ${VERSION_CODE}, \"version\": \"${VERSION_NAME}\", \"apk\": \"https://github.com/${GITHUB_REPOSITORY}/releases/download/apk-v${VERSION_NAME}/FloPro-Jobs.apk\"}" > version.json
+          cat version.json
+
       - uses: actions/upload-artifact@v4
         with:
           name: FloPro-Jobs-apk
@@ -71,5 +76,7 @@ jobs:
             FloPro Plumbing job cards app.
             Download **FloPro-Jobs.apk** on the phone and open it to install.
             Phones that already have the app get an "Update now" message - jobs, customers and invoices are kept.
-          files: FloPro-Jobs.apk
+          files: |
+            FloPro-Jobs.apk
+            version.json
           make_latest: true

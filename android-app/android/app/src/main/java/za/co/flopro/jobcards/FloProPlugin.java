@@ -77,6 +77,49 @@ public class FloProPlugin extends Plugin {
         call.resolve(r);
     }
 
+    /** Fetches a web address natively (no browser limits), following redirects. Returns {status, text}. */
+    @PluginMethod
+    public void getText(PluginCall call) {
+        final String url = call.getString("url");
+        new Thread(() -> {
+            HttpURLConnection c = null;
+            try {
+                String next = url;
+                int code = 0;
+                for (int hop = 0; hop < 6; hop++) {
+                    c = (HttpURLConnection) new URL(next).openConnection();
+                    c.setInstanceFollowRedirects(false);
+                    c.setConnectTimeout(15000);
+                    c.setReadTimeout(20000);
+                    c.setRequestProperty("User-Agent", "FloProPlumbing-Android");
+                    c.setRequestProperty("Accept", "application/json, */*");
+                    c.setRequestProperty("Cache-Control", "no-cache");
+                    code = c.getResponseCode();
+                    if (code >= 300 && code < 400) { next = c.getHeaderField("Location"); c.disconnect(); continue; }
+                    break;
+                }
+                InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
+                StringBuilder sb = new StringBuilder();
+                if (in != null) {
+                    byte[] buf = new byte[16384];
+                    int n;
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                    in.close();
+                    sb.append(bo.toString("UTF-8"));
+                }
+                JSObject r = new JSObject();
+                r.put("status", code);
+                r.put("text", sb.toString());
+                call.resolve(r);
+            } catch (Exception e) {
+                call.reject("OFFLINE: " + e.getMessage());
+            } finally {
+                if (c != null) c.disconnect();
+            }
+        }).start();
+    }
+
     /** Can this app install APKs yet? (Android asks once per app.) */
     @PluginMethod
     public void canInstall(PluginCall call) {
