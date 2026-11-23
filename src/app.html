@@ -177,7 +177,7 @@ const DEF={name:'FLOPRO PLUMBING',addr:'LOT 20\nREGIA STREET KWAMBONAMBI',phone:
  bank:'BANK: ABSA / BRANCH: RICHARDS BAY / CODE: 632005 / ACC. NO.: 4115325486',
  notes:'FloPro Plumbing accepts no responsibility for any underground water mains, electrical or fiber lines not indicated on plans or neither by client whilst excavation is taking place.  COC  to be issued once payment received in full',
  terms:'Quote payable in full in order for works to be scheduled.\nErrors and omissions are excluded.\nOver and above works will be quoted for accordingly.\nThank you for your business.',
- invPrefix:'IN',invNext:100728,qtPrefix:'QT-',qtNext:1,jcPrefix:'JC',jcNext:1,payTerms:'Due on Receipt',quoteDays:14,
+ invPrefix:'IN',invNext:100728,qtPrefix:'QT-',qtNext:1,jcPrefix:'JC',jcNext:1,payTerms:'Due on Receipt',quoteDays:14,kmRate:'',travelRate:'',
  markups:[{id:'parts',name:'Parts',pct:30},{id:'materials',name:'Materials',pct:25},{id:'labour',name:'Labour',pct:0}]};
 const S={settings:{...DEF},jobs:[],docs:[],customers:[],stock:[],sq:'',gq:'',cq:'',view:'jobs',id:null,q:'',filter:'All',dfilter:'invoice',pc:{}};
 const main=document.getElementById('main');
@@ -275,7 +275,14 @@ const mk=g=>num(((S.settings.markups||[]).find(m=>m.id===g)||{pct:0}).pct);
 const sell=(cost,g)=>Math.round(num(cost)*(1+mk(g)/100)*100)/100;
 const norm=s=>String(s||'').trim().toLowerCase();
 function findPart(code,title){return (code&&S.stock.find(s=>norm(s.code)===norm(code)))||(title&&S.stock.find(s=>norm(s.name)===norm(title)))}
-function toStock(it){if(!it.title?.trim()&&!it.code?.trim())return;let s=findPart(it.code,it.title),isNew=!s;
+function travelNote(){const s=S.settings;return num(s.kmRate)||num(s.travelRate)?`Charged at R${money(s.kmRate)} per km and R${money(s.travelRate)} per travel hour. Added to Parts &amp; labour for you.`:'Set your km and travel-hour rates on the Stock screen, then they are charged for you.'}
+function syncTravel(j){const s=S.settings,defs=[['km',j.travelKm,{code:'KM',title:'Travelling',unit:'km',rate:String(num(s.kmRate))}],['hrs',j.travelHrs,{code:'TRAVEL',title:'Travelling time',unit:'hours',rate:String(num(s.travelRate))}]];
+ for(const [kind,q,base] of defs){const i=j.items.findIndex(x=>x.travel===kind);
+  if(num(q)>0){if(i>-1)j.items[i].qty=String(q);else{const blank=j.items.findIndex(x=>!x.code&&!x.title&&!num(x.rate)&&!x.travel);const it={...base,desc:'',qty:String(q),grp:'labour',cost:'',travel:kind};if(blank>-1)j.items.splice(blank,1,it);else j.items.push(it)}}
+  else if(i>-1)j.items.splice(i,1)}
+ if(!j.items.length)j.items.push({code:'',title:'',desc:'',qty:'1',unit:'',grp:'parts',cost:'',rate:''});
+ save('jobs');const box=document.getElementById('items');if(box)box.innerHTML=j.items.map(itemHTML).join('');const tt=document.getElementById('jtot');if(tt)tt.textContent='R'+money(total(j.items))}
+function toStock(it){if(it.travel||(!it.title?.trim()&&!it.code?.trim()))return;let s=findPart(it.code,it.title),isNew=!s;
  if(!s){s={id:uid(),code:'',name:'',desc:'',unit:'',grp:'parts',cost:'',rate:'',manual:false,added:today()};S.stock.push(s)}
  Object.assign(s,{code:it.code?.trim()||s.code,name:it.title?.trim()||s.name,desc:it.desc||s.desc,unit:it.unit||s.unit,grp:it.grp||s.grp,cost:it.cost!==''&&it.cost!=null?it.cost:s.cost,rate:it.rate!==''&&it.rate!=null?it.rate:s.rate,updated:today()});
  s.manual=!(num(s.cost)&&Math.abs(sell(s.cost,s.grp)-num(s.rate))<.01);
@@ -298,6 +305,9 @@ function jobView(){
   ${T('Problem reported','problem',j.problem,'What did the client call about?')}
   ${T('Work done','work',j.work,'What did you do?')}
  </div>
+ <div class="card"><h2>Travelling</h2>
+  <div class="grid2"><label class="f">Kilometres<input data-tr="km" inputmode="decimal" value="${esc(j.travelKm||'')}" placeholder="0"></label><label class="f">Travel hours<input data-tr="hrs" inputmode="decimal" value="${esc(j.travelHrs||'')}" placeholder="0"></label></div>
+  <p class="mute" id="trnote" style="margin:0">${travelNote()}</p></div>
  <div class="card"><h2>Photos</h2><div class="photos" id="photos">${(j.photos||[]).map(p=>`<button class="ph" data-act="viewph" data-p="${p}"><img data-src="${p}" alt="Job photo"></button>`).join('')}
   <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo<input type="file" accept="image/*" capture="environment" class="phin"></label>
   <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>From gallery<input type="file" accept="image/*" multiple class="phin"></label></div></div>
@@ -431,6 +441,8 @@ function stockView(){const ms=S.settings.markups||[];return `<div class="top"><h
   ${ms.map(m=>`<div class="mkrow" data-mid="${m.id}"><input data-m="name" value="${esc(m.name)}" aria-label="Markup name"><div class="pct"><input data-m="pct" inputmode="decimal" value="${esc(m.pct)}" aria-label="Markup percent"><span>%</span></div><button class="lnk" data-act="delmk" data-id="${m.id}">Delete</button></div>`).join('')}
   <div class="grid2" style="margin-top:6px"><button class="btn ghost sm" data-act="addmk">+ Add markup</button><button class="btn sm" data-act="applymk">Update stock prices</button></div>
   <p class="mute" style="margin:8px 0 0">“Update stock prices” works out every selling price again from its cost. Prices you typed in yourself are left alone.</p></div>
+ <div class="card"><h2>Travel rates</h2><p class="mute" style="margin-top:-6px">Charged when you fill in kilometres or travel hours on a job card.</p>
+  <div class="grid2"><label class="f">Per km (R)<input data-s="kmRate" inputmode="decimal" value="${esc(S.settings.kmRate)}" placeholder="e.g. 6.50"></label><label class="f">Per travel hour (R)<input data-s="travelRate" inputmode="decimal" value="${esc(S.settings.travelRate)}" placeholder="e.g. 350"></label></div></div>
  <input type="search" id="sq" placeholder="Search parts, codes or labour" value="${esc(S.sq)}"><div id="slist"></div>`}
 function drawStock(){const q=norm(S.sq),el=document.getElementById('slist');if(!el)return;
  const list=S.stock.filter(s=>!q||norm([s.code,s.name,s.desc].join(' ')).includes(q)).sort((a,b)=>(a.name||a.code).localeCompare(b.name||b.code));
@@ -517,7 +529,7 @@ main.addEventListener('click',async e=>{
  else if(a==='opendoc')go('doc',b.dataset.id);
  else if(a==='dfilter'){S.dfilter=b.dataset.v;render()}
  else if(a==='additem'){j.items.push({code:'',title:'',desc:'',qty:'1',unit:'',grp:'parts',cost:'',rate:''});save('jobs');document.getElementById('items').insertAdjacentHTML('beforeend',itemHTML(j.items.at(-1),j.items.length-1));document.querySelector('#items .item:last-child input').focus()}
- else if(a==='delitem'){j.items.splice(+b.dataset.i,1);save('jobs');document.getElementById('items').innerHTML=j.items.map(itemHTML).join('');document.getElementById('jtot').textContent='R'+money(total(j.items))}
+ else if(a==='delitem'){const gone=j.items[+b.dataset.i];if(gone?.travel)j[gone.travel==='km'?'travelKm':'travelHrs']='';j.items.splice(+b.dataset.i,1);const tr=gone?.travel&&main.querySelector(`[data-tr=${gone.travel}]`);if(tr)tr.value='';save('jobs');document.getElementById('items').innerHTML=j.items.map(itemHTML).join('');document.getElementById('jtot').textContent='R'+money(total(j.items))}
  else if(a==='mkdoc'){if(!j.cust.trim()){toast('Add the customer name first');return}upsertFromJob(j);const nd=makeDoc(b.dataset.v,j);go('doc',nd.id)}
  else if(a==='jobcard')go('jobcard',j.id);
  else if(a==='deljob'){if(!twoTap(b,'j'+j.id,'Tap again to delete for good'))return;for(const p of j.photos||[])del('p:'+p);S.jobs=S.jobs.filter(x=>x!==j);save('jobs');toast('Job card deleted');go('jobs')}
@@ -557,7 +569,9 @@ main.addEventListener('input',e=>{const t=e.target,j=job(S.id),d=doc(S.id);
   if((f==='cost'||f==='grp')&&!s.manual&&num(s.cost)){s.rate=String(sell(s.cost,s.grp));main.querySelector('[data-p=rate]').value=s.rate}
   const n=document.getElementById('mknote');if(n)n.innerHTML=mkNote(s);save('stock')}
  else if(t.dataset.c){const c=cust(S.id);c[t.dataset.c]=t.value;save('customers');if(t.dataset.c==='name'){main.querySelector('h1').textContent=t.value||'New customer';S.jobs.forEach(x=>{if(x.custId===c.id){x.cust=t.value}});save('jobs')}}
+ else if(t.dataset.tr&&j){j[t.dataset.tr==='km'?'travelKm':'travelHrs']=t.value;syncTravel(j)}
  else if(t.dataset.it&&j){const row=t.closest('.item'),i=+row.dataset.i,it=j.items[i],f=t.dataset.it;it[f]=t.value;
+  if(it.travel&&f==='qty'){j[it.travel==='km'?'travelKm':'travelHrs']=t.value;const el=main.querySelector(`[data-tr=${it.travel}]`);if(el)el.value=t.value}
   if(f==='rate')it.manualRate=t.value!=='';
   if((f==='cost'||f==='grp')&&num(it.cost)&&!it.manualRate){it.rate=String(sell(it.cost,it.grp));row.querySelector('[data-it=rate]').value=it.rate}
   t.closest('.item').querySelector('[data-amt]').textContent='R'+money(num(it.qty)*num(it.rate));document.getElementById('jtot').textContent='R'+money(total(j.items));save('jobs')}
