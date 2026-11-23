@@ -80,10 +80,11 @@ input[type=search]{margin:0 0 10px}
 .photos input{display:none}
 .item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;background:var(--field)}
 .item .r1{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px}
-.item .r2{display:grid;grid-template-columns:64px 90px minmax(0,1fr);gap:8px}
+.item .r2{display:grid;grid-template-columns:80px minmax(0,1fr);gap:8px}
+.item select.grp{margin-top:8px}
 .item input,.item textarea{background:var(--card);margin-top:2px}
 .item textarea{min-height:60px;margin:6px 0}
-.item .r4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.item .r4 label{font-size:12px;font-weight:600;color:var(--mute)}
+.item .r4{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1.2fr);gap:8px;margin-top:8px}.item .r4 label{font-size:12px;font-weight:600;color:var(--mute)}
 .item select{background:var(--card);margin-top:2px;padding:8px}
 .item .r3{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .item .lnk{background:none;border:0;color:#c0392b;font:600 14px "Open Sans";min-height:40px;cursor:pointer}
@@ -270,12 +271,15 @@ function drawList(){
 /* ---------- job card editor ---------- */
 const F=(label,f,v,type='text',extra='')=>`<label class="f">${label}<input type="${type}" data-f="${f}" value="${esc(v)}" ${extra}></label>`;
 const T=(label,f,v,ph='')=>`<label class="f">${label}<textarea data-f="${f}" placeholder="${esc(ph)}">${esc(v)}</textarea></label>`;
-const grpOpts=g=>(S.settings.markups||[]).map(m=>`<option value="${m.id}" ${m.id===g?'selected':''}>${esc(m.name)} +${num(m.pct)}%</option>`).join('');
+const grpOpts=(g,pct=true)=>(S.settings.markups||[]).map(m=>`<option value="${m.id}" ${m.id===g?'selected':''}>${esc(m.name)}${pct?` +${num(m.pct)}%`:''}</option>`).join('');
+const lineMk=it=>it.mk!==undefined&&it.mk!==''?num(it.mk):mk(it.grp||'parts');
+const pctTxt=n=>String(Math.round(n*10)/10);
 function itemHTML(it,i){return `<div class="item" data-i="${i}">
  <div class="r1"><input data-it="code" list="codes" placeholder="Code" value="${esc(it.code)}" aria-label="Item code"><input data-it="title" list="parts" placeholder="Part or labour" value="${esc(it.title)}" aria-label="Item"></div>
  <textarea data-it="desc" placeholder="Details (optional)" aria-label="Details">${esc(it.desc)}</textarea>
- <div class="r2"><input data-it="qty" inputmode="decimal" value="${esc(it.qty)}" aria-label="Qty" placeholder="Qty"><input data-it="unit" value="${esc(it.unit)}" placeholder="Unit" aria-label="Unit"><select data-it="grp" aria-label="Markup type">${grpOpts(it.grp||'parts')}</select></div>
- <div class="r4"><label>Cost price<input data-it="cost" inputmode="decimal" value="${esc(it.cost)}" placeholder="R you paid"></label><label>Selling price<input data-it="rate" inputmode="decimal" value="${esc(it.rate)}" placeholder="R each"></label></div>
+ <div class="r2"><input data-it="qty" inputmode="decimal" value="${esc(it.qty)}" aria-label="Qty" placeholder="Qty"><input data-it="unit" value="${esc(it.unit)}" placeholder="Unit" aria-label="Unit"></div>
+ <select data-it="grp" class="grp" aria-label="Markup type">${grpOpts(it.grp||'parts',false)}</select>
+ <div class="r4"><label>Cost price<input data-it="cost" inputmode="decimal" value="${esc(it.cost)}" placeholder="R you paid"></label><label>Markup %<input data-it="mk" inputmode="decimal" value="${esc(it.mk!==undefined&&it.mk!==''?it.mk:pctTxt(mk(it.grp||'parts')))}" placeholder="%"></label><label>Selling price<input data-it="rate" inputmode="decimal" value="${esc(it.rate)}" placeholder="R each"></label></div>
  <div class="r3"><span class="amt" data-amt>R${money(num(it.qty)*num(it.rate))}</span><button class="lnk" data-act="delitem" data-i="${i}">Remove</button></div></div>`}
 const mk=g=>num(((S.settings.markups||[]).find(m=>m.id===g)||{pct:0}).pct);
 const sell=(cost,g)=>Math.round(num(cost)*(1+mk(g)/100)*100)/100;
@@ -293,7 +297,7 @@ function toStock(it){if(it.travel||(!it.title?.trim()&&!it.code?.trim()))return;
  Object.assign(s,{code:it.code?.trim()||s.code,name:it.title?.trim()||s.name,desc:it.desc||s.desc,unit:it.unit||s.unit,grp:it.grp||s.grp,cost:it.cost!==''&&it.cost!=null?it.cost:s.cost,rate:it.rate!==''&&it.rate!=null?it.rate:s.rate,updated:today()});
  s.manual=!(num(s.cost)&&Math.abs(sell(s.cost,s.grp)-num(s.rate))<.01);
  save('stock');if(isNew)toast(`${s.name||s.code} added to stock list`)}
-function fillFromStock(it,s){Object.assign(it,{code:s.code,title:s.name,desc:s.desc,unit:s.unit,grp:s.grp,cost:s.cost,rate:s.rate})}
+function fillFromStock(it,s){Object.assign(it,{code:s.code,title:s.name,desc:s.desc,unit:s.unit,grp:s.grp,cost:s.cost,rate:s.rate,mk:num(s.cost)?pctTxt((num(s.rate)/num(s.cost)-1)*100):''})}
 function jobView(){
  const j=job(S.id);if(!j)return go('jobs');
  const docs=S.docs.filter(d=>d.jobId===j.id);
@@ -578,8 +582,10 @@ main.addEventListener('input',e=>{const t=e.target,j=job(S.id),d=doc(S.id);
  else if(t.dataset.tr&&j){j[t.dataset.tr==='km'?'travelKm':'travelHrs']=t.value;syncTravel(j)}
  else if(t.dataset.it&&j){const row=t.closest('.item'),i=+row.dataset.i,it=j.items[i],f=t.dataset.it;it[f]=t.value;
   if(it.travel&&f==='qty'){j[it.travel==='km'?'travelKm':'travelHrs']=t.value;const el=main.querySelector(`[data-tr=${it.travel}]`);if(el)el.value=t.value}
-  if(f==='rate')it.manualRate=t.value!=='';
-  if((f==='cost'||f==='grp')&&num(it.cost)&&!it.manualRate){it.rate=String(sell(it.cost,it.grp));row.querySelector('[data-it=rate]').value=it.rate}
+  const setv=(k,v)=>{const el=row.querySelector(`[data-it=${k}]`);if(el&&el!==t)el.value=v};
+  if(f==='grp'){it.mk=pctTxt(mk(it.grp));setv('mk',it.mk)}
+  if(['cost','mk','grp'].includes(f)&&num(it.cost)){it.rate=String(Math.round(num(it.cost)*(1+lineMk(it)/100)*100)/100);setv('rate',it.rate)}
+  if(f==='rate'&&num(it.cost)&&t.value!==''){it.mk=pctTxt((num(it.rate)/num(it.cost)-1)*100);setv('mk',it.mk)}
   t.closest('.item').querySelector('[data-amt]').textContent='R'+money(num(it.qty)*num(it.rate));document.getElementById('jtot').textContent='R'+money(total(j.items));save('jobs')}
  else if(t.dataset.d&&d){d[t.dataset.d]=t.value;save('docs');document.getElementById('paperHost').innerHTML=paperDoc(d);fitPaper()}
  else if(t.dataset.s){const k=t.dataset.s;S.settings[k]=t.type==='number'?num(t.value):t.value;save('settings')}
@@ -592,7 +598,7 @@ main.addEventListener('change',async e=>{const t=e.target,j=job(S.id);
  else if(t.dataset.f==='cust'&&j){const ex=byName(t.value);if(ex&&ex.id!==j.custId){linkCust(j,ex);for(const k of CF){const el=main.querySelector(`[data-f=${k}]`);if(el)el.value=j[k]}}else upsertFromJob(j);const n=document.getElementById('custnote');if(n)n.textContent='Saved customer — changes here update their details too.'}
  else if(t.dataset.it&&j){const row=t.closest('.item'),i=+row.dataset.i,it=j.items[i],f=t.dataset.it;
   if((f==='code'||f==='title')&&!num(it.rate)&&!num(it.cost)){const s=findPart(f==='code'?t.value:'',f==='title'?t.value:'');if(s){fillFromStock(it,s);it.manualRate=false;row.outerHTML=itemHTML(it,i);document.getElementById('jtot').textContent='R'+money(total(j.items));save('jobs');return}}
-  if(['code','title','cost','rate','grp','unit'].includes(f))toStock(it);save('jobs')}
+  if(['code','title','cost','rate','grp','unit','mk'].includes(f))toStock(it);save('jobs')}
 });
 
 /* ---------- auto update ----------
