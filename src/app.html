@@ -229,7 +229,7 @@ function render(){
  else if(S.view==='docs')main.innerHTML=docsView();
  else if(S.view==='doc')docView();
  else if(S.view==='jobcard')jobcardView();
- else if(S.view==='settings')main.innerHTML=settingsView();
+ else if(S.view==='settings'){main.innerHTML=settingsView();if(isNative())info().then(i=>{const v=document.getElementById('appver');if(v)v.textContent=i.version})}
  else if(S.view==='custs')main.innerHTML=custsView(),drawCusts();
  else if(S.view==='cust')custView();
  else if(S.view==='stock')main.innerHTML=stockView(),drawStock();
@@ -456,7 +456,7 @@ function settingsView(){const s=S.settings;const I=(l,k,t='text')=>`<label class
   <div class="grid2">${I('Invoice prefix','invPrefix')}${I('Next invoice no.','invNext','number')}${I('Quote prefix','qtPrefix')}${I('Next quote no.','qtNext','number')}${I('Job card prefix','jcPrefix')}${I('Next job card no.','jcNext','number')}</div></div>
  <div class="card"><h2>Backup</h2><p class="mute">Everything is saved on this phone only. Make a backup every week or so and keep it on Google Drive or WhatsApp-to-self, so nothing is lost if the phone is lost.</p>
   <div class="acts"><button class="btn" data-act="export">Make backup file</button><label class="btn ghost">Restore from backup<input type="file" accept=".json,application/json" id="imp" hidden></label></div></div>
- <div class="card"><h2>App updates</h2><p class="mute">The app updates itself when you open it with internet. Your jobs, customers and invoices stay on the phone and are not touched by updates.</p><p class="mute">Version: <b>${BUILD.startsWith('__')?'preview':esc(BUILD)}</b></p><button class="btn ghost" data-act="chkupd">Check for updates now</button></div>
+ <div class="card"><h2>App updates</h2><p class="mute">When a new version is out, the app tells you when you open it and installs it with one tap. Your jobs, customers, stock and invoices stay on the phone and are kept through updates.</p><p class="mute">Version: <b id="appver">${BUILD.startsWith('__')?'preview':esc(BUILD)}</b></p><button class="btn ghost" data-act="chkupd">Check for updates now</button></div>
  <div class="card"><h2>Put it on the home screen</h2><p class="mute" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → <b>Add to Home screen</b>.<br><b>iPhone (Safari):</b> Share button → <b>Add to Home Screen</b>.</p></div>`}
 async function exportAll(){toast('Building backup…');const photos={};for(const j of S.jobs)for(const p of j.photos||[])photos[p]=await photo(p);
  const blob=new Blob([JSON.stringify({app:'flopro',v:1,at:new Date().toISOString(),settings:S.settings,customers:S.customers,stock:S.stock,jobs:S.jobs,docs:S.docs,photos})],{type:'application/json'});
@@ -539,16 +539,32 @@ main.addEventListener('change',async e=>{const t=e.target,j=job(S.id);
   if(['code','title','cost','rate','grp','unit'].includes(f))toStock(it);save('jobs')}
 });
 
-/* ---------- auto update ---------- */
-const live=!BUILD.startsWith('__')&&(location.protocol==='https:'||location.hostname==='localhost')&&window.self===window.top;
-let swReg=null,updShown=false;
+/* ---------- auto update ----------
+   APK: checks GitHub releases for a newer FloPro-Jobs.apk, downloads it and opens Android's installer.
+   Website (if ever hosted): checks version.json and reloads. Saved data is never touched. */
+const REPO='freddieschallies/flopro';
+const isNative=()=>!!native();
+const live=!isNative()&&!BUILD.startsWith('__')&&(location.protocol==='https:'||location.hostname==='localhost')&&window.self===window.top;
+let swReg=null,updShown=false,upd=null,lastCheck=0,appInfo=null;
+async function info(){if(appInfo)return appInfo;try{appInfo=await native().info()}catch(e){appInfo={version:'?',build:0}}return appInfo}
 async function checkUpdate(manual){
- if(!live){if(manual)toast('Updates switch on once the app is opened from its website');return}
+ if(!manual&&Date.now()-lastCheck<10*60*1000)return;lastCheck=Date.now();
+ if(isNative()){try{const me=await info(),r=await fetch(`https://api.github.com/repos/${REPO}/releases/latest`,{cache:'no-store'});if(!r.ok)throw 0;
+   const rel=await r.json(),n=parseInt(String(rel.tag_name).split('.').pop()),a=(rel.assets||[]).find(x=>/\.apk$/i.test(x.name));
+   if(a&&n>+me.build){upd={url:a.browser_download_url,ver:'1.0.'+n};showUpdate(`New version ${upd.ver} is ready.`)}else if(manual)toast(`You have the latest version (${me.version})`)}
+  catch(e){if(manual)toast('No internet — try again later')}return}
+ if(!live){if(manual)toast('Updates come through the FloPro Jobs app');return}
  try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});const v=await r.json();
-  if(v.build&&v.build!==BUILD){const busy=['job','doc','cust','jobcard'].includes(S.view)||document.querySelector('.ov');if(busy||manual)showUpdate();else applyUpdate()}
+  if(v.build&&v.build!==BUILD){const busy=['job','doc','cust','jobcard','part'].includes(S.view)||document.querySelector('.ov');if(busy||manual)showUpdate('A new version of the app is ready.');else applyUpdate()}
   else if(manual)toast('You have the latest version')}catch(e){if(manual)toast('No internet — try again later')}}
-function showUpdate(){if(updShown)return;updShown=true;const d=document.createElement('div');d.className='upd';d.innerHTML='<span>A new version of the app is ready.</span><button class="btn sm">Update now</button>';d.querySelector('button').onclick=applyUpdate;document.body.append(d)}
-async function applyUpdate(){toast('Updating…');await flush();try{if(swReg)await swReg.update();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()}
+function showUpdate(msg){let d=document.querySelector('.upd');if(!d){d=document.createElement('div');d.className='upd';d.innerHTML='<span></span><button class="btn sm">Update now</button>';d.querySelector('button').onclick=applyUpdate;document.body.append(d)}d.querySelector('span').textContent=msg;updShown=true}
+async function applyUpdate(){await flush();
+ if(isNative()&&upd){const d=document.querySelector('.upd'),b=d?.querySelector('button'),s=d?.querySelector('span');if(b)b.disabled=true;if(s)s.textContent='Downloading update…';
+  const h=await native().addListener('updateProgress',p=>{if(s)s.textContent=`Downloading update… ${p.pct}%`});
+  try{await native().installUpdate({url:upd.url});if(s)s.textContent='Tap Install on the next screen. Your jobs and invoices are kept.'}
+  catch(e){const m=String(e?.message||e);if(s)s.textContent=m.includes('NEED_PERMISSION')?'Allow FloPro Jobs to install apps, then come back and tap Update now.':'Download failed — check internet and try again.'}
+  finally{if(b)b.disabled=false;h?.remove?.()}return}
+ toast('Updating…');try{if(swReg)await swReg.update();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()}
 if(live&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()});
 setInterval(()=>checkUpdate(),30*60*1000);

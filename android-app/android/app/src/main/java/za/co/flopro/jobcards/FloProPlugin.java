@@ -3,6 +3,8 @@ package za.co.flopro.jobcards;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.print.PrintAttributes;
 import android.print.PrintManager;
 import androidx.core.content.FileProvider;
@@ -13,9 +15,12 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-/** Native helpers the web app calls from the APK: print / save PDF, and share a backup file. */
+/** Native helpers the web app calls from the APK: print / save PDF, share a backup file, and download + install app updates. */
 @CapacitorPlugin(name = "FloPro")
 public class FloProPlugin extends Plugin {
 
@@ -70,5 +75,70 @@ public class FloProPlugin extends Plugin {
         r.put("version", BuildConfig.VERSION_NAME);
         r.put("build", BuildConfig.VERSION_CODE);
         call.resolve(r);
+    }
+
+    /** Can this app install APKs yet? (Android asks once per app.) */
+    @PluginMethod
+    public void canInstall(PluginCall call) {
+        JSObject r = new JSObject();
+        r.put("allowed", Build.VERSION.SDK_INT < 26 || getContext().getPackageManager().canRequestPackageInstalls());
+        call.resolve(r);
+    }
+
+    /** Downloads the new APK from GitHub and opens Android's installer. Data in the app is kept. */
+    @PluginMethod
+    public void installUpdate(PluginCall call) {
+        final String url = call.getString("url");
+        if (url == null || url.isEmpty()) { call.reject("No download link"); return; }
+        if (Build.VERSION.SDK_INT >= 26 && !getContext().getPackageManager().canRequestPackageInstalls()) {
+            Intent allow = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getContext().getPackageName()));
+            allow.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(allow);
+            call.reject("NEED_PERMISSION");
+            return;
+        }
+        new Thread(() -> {
+            HttpURLConnection c = null;
+            try {
+                File dir = new File(getContext().getCacheDir(), "updates");
+                dir.mkdirs();
+                File apk = new File(dir, "FloPro-Jobs.apk");
+                String next = url;
+                for (int hop = 0; hop < 6; hop++) {
+                    c = (HttpURLConnection) new URL(next).openConnection();
+                    c.setInstanceFollowRedirects(false);
+                    c.setConnectTimeout(20000);
+                    c.setReadTimeout(60000);
+                    int code = c.getResponseCode();
+                    if (code >= 300 && code < 400) { next = c.getHeaderField("Location"); c.disconnect(); continue; }
+                    if (code != 200) throw new Exception("server said " + code);
+                    break;
+                }
+                long total = c.getContentLengthLong(), done = 0;
+                int last = -1;
+                try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(apk)) {
+                    byte[] buf = new byte[65536];
+                    int n;
+                    while ((n = in.read(buf)) > 0) {
+                        out.write(buf, 0, n);
+                        done += n;
+                        if (total > 0) {
+                            int pct = (int) (done * 100 / total);
+                            if (pct != last) { last = pct; JSObject p = new JSObject(); p.put("pct", pct); notifyListeners("updateProgress", p); }
+                        }
+                    }
+                }
+                Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", apk);
+                Intent install = new Intent(Intent.ACTION_VIEW);
+                install.setDataAndType(uri, "application/vnd.android.package-archive");
+                install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(install);
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("Download failed: " + e.getMessage());
+            } finally {
+                if (c != null) c.disconnect();
+            }
+        }).start();
     }
 }

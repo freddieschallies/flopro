@@ -1,9 +1,11 @@
 name: Build Android APK
 
+# Every push to main builds a new APK and publishes it as the latest GitHub release.
+# The app checks that release when it opens and offers "Update now".
 on:
   push:
     branches: [main]
-    paths: ["android-app/**", ".github/workflows/android.yml"]
+    paths-ignore: ["README.md"]
   workflow_dispatch:
 
 permissions:
@@ -12,6 +14,9 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: 1.0.${{ github.run_number }}
     steps:
       - uses: actions/checkout@v5
 
@@ -24,57 +29,47 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Build the app into the APK's web folder
+        run: |
+          python3 scripts/build.py "$VERSION_NAME"
+          mkdir -p android-app/www
+          cp -r index.html manifest.webmanifest icons android-app/www/
+
       - name: Install Capacitor and sync
         working-directory: android-app
         run: |
           npm ci
           npx cap sync android
 
-      - name: Signing key
-        id: key
-        env:
-          KEYSTORE_B64: ${{ secrets.FLOPRO_KEYSTORE_BASE64 }}
-        run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/flopro.jks"
-            echo "file=$RUNNER_TEMP/flopro.jks" >> "$GITHUB_OUTPUT"
-            echo "Signing with the FloPro release key"
-          else
-            echo "::warning::No FLOPRO_KEYSTORE_BASE64 secret - building a debug-signed test APK. Phones can't update this over a release-signed install."
-          fi
-
-      - name: Build APK
+      - name: Build signed APK
         working-directory: android-app/android
         env:
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: 1.0.${{ github.run_number }}
-          FLOPRO_KEYSTORE_FILE: ${{ steps.key.outputs.file }}
           FLOPRO_KEYSTORE_PASSWORD: ${{ secrets.FLOPRO_KEYSTORE_PASSWORD }}
-          FLOPRO_KEY_ALIAS: ${{ secrets.FLOPRO_KEY_ALIAS }}
-          FLOPRO_KEY_PASSWORD: ${{ secrets.FLOPRO_KEYSTORE_PASSWORD }}
         run: |
-          chmod +x gradlew
-          if [ -n "$FLOPRO_KEYSTORE_FILE" ]; then
-            ./gradlew --no-daemon assembleRelease
-            cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/FloPro-Jobs.apk"
-          else
-            ./gradlew --no-daemon assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/FloPro-Jobs.apk"
+          if [ -z "$FLOPRO_KEYSTORE_PASSWORD" ]; then
+            echo "::error::Add the FLOPRO_KEYSTORE_PASSWORD secret (Settings > Secrets and variables > Actions) so the APK is signed with the FloPro key."
+            exit 1
           fi
+          export FLOPRO_KEYSTORE_FILE="$GITHUB_WORKSPACE/android-app/signing/flopro-release.jks"
+          export FLOPRO_KEY_ALIAS=flopro
+          export FLOPRO_KEY_PASSWORD="$FLOPRO_KEYSTORE_PASSWORD"
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/FloPro-Jobs.apk"
 
       - uses: actions/upload-artifact@v4
         with:
           name: FloPro-Jobs-apk
           path: FloPro-Jobs.apk
 
-      - name: Publish as a GitHub release (stable download link)
+      - name: Publish as the latest release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: apk-v1.0.${{ github.run_number }}
-          name: FloPro Jobs APK 1.0.${{ github.run_number }}
+          tag_name: apk-v${{ env.VERSION_NAME }}
+          name: FloPro Jobs ${{ env.VERSION_NAME }}
           body: |
-            Android app for FloPro Plumbing job cards.
+            FloPro Plumbing job cards app.
             Download **FloPro-Jobs.apk** on the phone and open it to install.
-            The app itself updates automatically from the website - you only need a new APK if the Android shell changes.
+            Phones that already have the app get an "Update now" message - jobs, customers and invoices are kept.
           files: FloPro-Jobs.apk
           make_latest: true

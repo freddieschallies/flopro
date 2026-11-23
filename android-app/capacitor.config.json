@@ -3,8 +3,6 @@
   "appName": "FloPro Jobs",
   "webDir": "www",
   "server": {
-    "url": "https://freddieschallies.github.io/flopro/",
-    "errorPath": "offline.html",
     "androidScheme": "https"
   },
   "android": {
