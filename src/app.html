@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09396a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FloPro Jobs">
+<title>FloPro Job Cards</title>
+<link rel="icon" href="__ICON__">
+<link rel="apple-touch-icon" href="__ICON__">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a plumber's work tool — plain, sturdy, big thumbs, no fuss.
+   IDEA: the FloPro van door: navy panel, white house-and-tap mark.
+   PICTURE: the job list itself; documents render as real A4 paper.
+   COLOUR and TYPE: FloPro navy #09396a, white, one water-blue accent; Exo 2 titles, Open Sans body/paper.
+   LAYOUT: one column, sticky navy header, bottom tab bar, big action buttons. */
+:root{color-scheme:light dark;--navy:#09396a;--navy2:#0e4d8e;--sky:#2f9ad8;
+--bg:light-dark(#eef2f6,#0b1522);--card:light-dark(#fff,#13233a);--ink:light-dark(#13233a,#e7eef7);
+--mute:light-dark(#5b6a7d,#9fb0c4);--line:light-dark(#d6dde6,#26384f);--field:light-dark(#f7f9fb,#0f1d31)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Open Sans",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+h1,h2,h3{font-family:"Exo 2",system-ui,sans-serif;margin:0;line-height:1.1}
+header.app{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:12px}
+header.app img{width:42px;height:42px;border-radius:9px}
+header.app .nm{font-family:"Exo 2",system-ui,sans-serif;font-weight:800;font-size:20px;letter-spacing:.5px}
+header.app .tg{font-size:12px;opacity:.8}
+main{max-width:780px;margin:0 auto;padding:16px 14px calc(110px + env(safe-area-inset-bottom))}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{background:none;border:0;color:var(--mute);font:600 12px/1.2 "Open Sans";text-align:center;padding:9px 2px 10px;min-height:58px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav.tabs button.on{color:var(--sky)}
+nav.tabs svg{width:24px;height:24px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}
+.top h1{font-size:30px}
+.btn{appearance:none;border:0;border-radius:12px;background:var(--navy);color:#fff;font:700 16px "Open Sans";padding:12px 18px;min-height:48px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+:root[data-theme=dark] .btn,.btn{}
+.btn.sky{background:var(--sky)}.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.red{background:#c0392b}.btn.green{background:#1e8e4f}.btn.sm{min-height:40px;padding:8px 14px;font-size:14px}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h2{font-size:19px;margin-bottom:12px;color:var(--ink)}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--mute);margin-bottom:10px}
+input,textarea,select{width:100%;font:16px "Open Sans",sans-serif;color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:4px;min-height:46px}
+textarea{min-height:84px;resize:vertical}
+input[type=search]{margin:0 0 10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;scrollbar-width:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 14px;font:600 14px "Open Sans";min-height:40px;cursor:pointer}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;color:var(--ink);font:inherit;cursor:pointer}
+.row .no{font-weight:700;font-size:14px;color:var(--mute)}
+.row .who{font-weight:700;font-size:17px}
+.row .sub{color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.amt{font-weight:700;white-space:nowrap}
+.st{display:inline-block;border-radius:99px;padding:3px 10px;font-size:12.5px;font-weight:700;white-space:nowrap;color:#fff;background:#6b7c90}
+.st.Quoted,.st.Draft,.st.Sent{background:#d98a0b}.st.In-progress{background:var(--sky)}.st.Done{background:#13897f}
+.st.Invoiced,.st.Unpaid{background:var(--navy2)}.st.Paid,.st.Accepted{background:#1e8e4f}.st.Declined{background:#a33}
+.empty{text-align:center;padding:40px 16px;color:var(--mute)}
+.empty img{width:84px;border-radius:18px;margin-bottom:10px}
+.back{background:none;border:0;color:var(--sky);font:700 16px "Open Sans";padding:8px 0;min-height:44px;cursor:pointer}
+.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.photos .ph,.photos label{aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--field);border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--mute);font-size:13px;font-weight:600;cursor:pointer;padding:0}
+.photos .ph{border:0}.photos img{width:100%;height:100%;object-fit:cover;display:block}
+.photos label svg{width:30px;height:30px;margin-bottom:4px}
+.photos input{display:none}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;background:var(--field)}
+.item .r1{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px}
+.item .r2{display:grid;grid-template-columns:64px 90px minmax(0,1fr);gap:8px}
+.item input,.item textarea{background:var(--card);margin-top:2px}
+.item textarea{min-height:60px;margin:6px 0}
+.item .r4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.item .r4 label{font-size:12px;font-weight:600;color:var(--mute)}
+.item select{background:var(--card);margin-top:2px;padding:8px}
+.item .r3{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.item .lnk{background:none;border:0;color:#c0392b;font:600 14px "Open Sans";min-height:40px;cursor:pointer}
+.mkrow{display:grid;grid-template-columns:minmax(0,1fr) 96px auto;gap:8px;align-items:center;margin-bottom:8px}.mkrow input{margin:0}.pct{display:flex;align-items:center;gap:4px}.pct span{font-weight:700}
+.mkrow .lnk,.lnk{background:none;border:0;color:#c0392b;font:600 14px "Open Sans";min-height:40px;cursor:pointer}
+.tot{display:flex;justify-content:space-between;align-items:center;font-size:18px;padding:6px 2px}
+.acts{display:grid;gap:10px}
+.mute{color:var(--mute);font-size:14px}
+.stat{display:flex;gap:12px;margin-bottom:14px}
+.stat>div{flex:1;background:var(--navy);color:#fff;border-radius:14px;padding:12px 14px}
+.stat b{display:block;font:800 clamp(20px,6vw,26px) "Exo 2",system-ui,sans-serif;white-space:nowrap}
+.stat span{font-size:13px;opacity:.85}
+.ov{position:fixed;inset:0;z-index:50;background:rgba(5,15,30,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px}
+.ov img{max-width:100%;max-height:75vh;border-radius:10px}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#13233a;color:#fff;padding:10px 18px;border-radius:99px;font-weight:600;z-index:60;font-size:14px;max-width:90vw;text-align:center}
+.pwrap{overflow:hidden;border-radius:6px;box-shadow:0 4px 24px rgba(0,0,0,.18);background:#fff;margin-bottom:14px}
+.pwrap .paper{transform-origin:0 0}
+#printHost{display:none}
+.upd{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 70px);z-index:40;background:var(--sky);color:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:560px;margin:0 auto}
+.upd span{flex:1;font-weight:600;font-size:15px}.upd .btn{background:#fff;color:var(--navy)}
+/* ---------- A4 paper (matches FloPro's Zoho invoice) ---------- */
+.paper{width:794px;min-height:1123px;background:#fff;color:#222;font:12px/1.5 "Open Sans",Arial,sans-serif;padding:44px 58px 34px;display:flex;flex-direction:column}
+.paper *{color:inherit}
+.p-top{display:flex;justify-content:space-between;align-items:flex-start}
+.p-logo{width:210px;height:200px;background:#f0f0f4;display:flex;align-items:center;justify-content:center}
+.p-logo img{width:176px}
+.p-title{text-align:right}
+.p-h{font-size:36px;line-height:1.1;font-weight:400;color:#111}
+.p-no{font-weight:700;font-size:12px;margin-top:2px}
+.p-bl{font-weight:700;font-size:11px;margin-top:26px}
+.p-bal{font-weight:700;font-size:18px}
+.p-co{margin-top:10px;font-size:12px;line-height:1.55}
+.p-co b{font-size:12.5px}
+.p-mid{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px;gap:20px}
+.p-to{font-size:12px;line-height:1.55}
+.p-to .bt{color:#555;font-size:11px}
+.p-meta{border-collapse:collapse;font-size:12px}
+.p-meta td{padding:5px 0 5px 20px;text-align:right;white-space:nowrap}
+.p-meta td:first-child{color:#333}
+.p-meta td:last-child{min-width:150px}
+.p-sub{margin-top:22px;font-size:12px}
+.p-items{width:100%;border-collapse:collapse;margin-top:16px;font-size:12px}
+.p-items th{background:#3c3d3a;color:#fff;font-weight:400;padding:9px 10px;text-align:left}
+.p-items th.n,.p-items td.n{text-align:right}
+.p-items td{padding:12px 10px;vertical-align:top;border-bottom:1px solid #cfcfcf}
+.p-items .d{color:#444;font-size:11.5px;white-space:pre-line}
+.p-items .u{font-size:10px;color:#444}
+.p-tot{margin-left:auto;width:340px;margin-top:6px;font-size:12px}
+.p-tot>div{display:flex;justify-content:space-between;padding:10px 12px}
+.p-tot .b{font-weight:700}
+.p-tot .hl{background:#f3f3f2;font-weight:700;padding:14px 12px}
+.p-notes{margin-top:28px;font-size:11.5px;white-space:pre-line;line-height:1.6}
+.p-terms{margin-top:16px;font-size:11.5px;white-space:pre-line;line-height:1.6;text-transform:uppercase}
+.p-foot{margin-top:auto;padding-top:14px;border-top:1px solid #bbb;font-size:11px;white-space:pre-line;line-height:1.6}
+.p-stamp{display:inline-block;border:3px solid #1e8e4f;color:#1e8e4f;font:800 22px "Open Sans";padding:2px 14px;transform:rotate(-8deg);margin-top:12px;letter-spacing:2px}
+.p-sec{margin-top:18px}.p-sec h4{margin:0 0 4px;font-size:12px;background:#3c3d3a;color:#fff;font-weight:600;padding:6px 10px}
+.p-sec div{white-space:pre-line;padding:6px 10px;min-height:36px}
+.p-ph{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.p-ph img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.p-sig{display:flex;gap:40px;margin-top:40px}.p-sig div{flex:1;border-top:1px solid #333;padding-top:4px;font-size:11px}
+@media(max-width:420px){.top h1{font-size:26px}}
+@media print{
+  @page{size:A4;margin:0}
+  html,body{background:#fff!important}
+  header.app,nav.tabs,main,.toast,.ov{display:none!important}
+  #printHost{display:block}
+  .paper{min-height:286mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .p-sec h4,.p-items th,.p-tot .hl,.p-logo{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media(prefers-reduced-motion:no-preference){.row{transition:transform .12s}.row:active{transform:scale(.985)}}
+</style>
+</head>
+<body>
+<header class="app"><img src="__ICON__" alt=""><div><div class="nm">FLOPRO PLUMBING</div><div class="tg">Job cards · Quotes · Invoices</div></div></header>
+<main id="main"><p class="mute">Loading…</p></main>
+<nav class="tabs">
+  <button data-tab="jobs" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Job cards</button>
+  <button data-tab="custs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .8 3.2 2.6 3.5 5.2"/></svg>Customers</button>
+  <button data-tab="stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></svg>Stock</button>
+  <button data-tab="docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h7M9 17h7"/></svg>Invoices</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+</nav>
+<div id="printHost"></div>
+<script>
+{
+const LOGO="__LOGO__", ICON="__ICON__", BUILD="__BUILD__";
+const STATUS=['New','Quoted','In progress','Done','Invoiced','Paid'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DEF={name:'FLOPRO PLUMBING',addr:'LOT 20\nREGIA STREET KWAMBONAMBI',phone:'0605198480',email:'',
+ legal:'BARRY JOHN RATTRAY T/A\nFLOPRO PLUMBING CK NO.: 2019/179401/07',
+ bank:'BANK: ABSA / BRANCH: RICHARDS BAY / CODE: 632005 / ACC. NO.: 4115325486',
+ notes:'FloPro Plumbing accepts no responsibility for any underground water mains, electrical or fiber lines not indicated on plans or neither by client whilst excavation is taking place.  COC  to be issued once payment received in full',
+ terms:'Quote payable in full in order for works to be scheduled.\nErrors and omissions are excluded.\nOver and above works will be quoted for accordingly.\nThank you for your business.',
+ invPrefix:'IN',invNext:100728,qtPrefix:'QT-',qtNext:1,jcPrefix:'JC',jcNext:1,payTerms:'Due on Receipt',quoteDays:14,
+ markups:[{id:'parts',name:'Parts',pct:30},{id:'materials',name:'Materials',pct:25},{id:'labour',name:'Labour',pct:0}]};
+const S={settings:{...DEF},jobs:[],docs:[],customers:[],stock:[],sq:'',cq:'',view:'jobs',id:null,q:'',filter:'All',dfilter:'invoice',pc:{}};
+const main=document.getElementById('main');
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const num=v=>{const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n};
+const money=n=>(+n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const addDays=(d,n)=>{const x=new Date(d+'T00:00');x.setDate(x.getDate()+n);return iso(x)};
+const fdate=d=>{if(!d)return'';const [y,m,dd]=d.split('-');return `${dd} ${MON[+m-1]} ${y}`};
+const total=items=>(items||[]).reduce((a,i)=>a+num(i.qty)*num(i.rate),0);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const cls=s=>String(s).replace(/\s+/g,'-');
+const job=id=>S.jobs.find(j=>j.id===id);
+const doc=id=>S.docs.find(d=>d.id===id);
+const cust=id=>S.customers.find(c=>c.id===id);
+const byName=n=>{n=String(n||'').trim().toLowerCase();return n&&S.customers.find(c=>c.name.trim().toLowerCase()===n)};
+const CF=['phone','email','address'];
+function linkCust(j,c){j.custId=c.id;j.cust=c.name;for(const k of CF)j[k]=c[k]||'';save('jobs')}
+function upsertFromJob(j){if(!j.cust.trim())return;let c=j.custId&&cust(j.custId);
+ if(c&&c.name.trim().toLowerCase()===j.cust.trim().toLowerCase())return c;
+ const ex=byName(j.cust);if(ex){for(const k of CF)if(!j[k]&&ex[k])j[k]=ex[k];for(const k of CF)if(!ex[k]&&j[k])ex[k]=j[k];j.custId=ex.id;save('customers');save('jobs');return ex}
+ c={id:uid(),name:j.cust.trim(),phone:j.phone,email:j.email,address:j.address,notes:'',added:today()};S.customers.push(c);j.custId=c.id;save('customers');save('jobs');toast(`${c.name} saved to customers`);return c}
+let tt;function toast(m){document.querySelector('.toast')?.remove();const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);clearTimeout(tt);tt=setTimeout(()=>t.remove(),2600)}
+
+/* ---------- storage (IndexedDB on this phone) ---------- */
+let natP;const native=()=>{if(natP===undefined){const C=window.Capacitor;natP=C?.isNativePlatform?.()&&C.registerPlugin?C.registerPlugin('FloPro'):null}return natP};
+const mem=new Map();let idb=null;
+function openDB(){return new Promise(res=>{try{const r=indexedDB.open('flopro-jobcards',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{idb=r.result;res()};r.onerror=()=>res();r.onblocked=()=>res()}catch(e){res()}})}
+function tx(mode,fn){return new Promise((res,rej)=>{const t=idb.transaction('kv',mode),r=fn(t.objectStore('kv'));t.oncomplete=()=>res(r?.result);t.onerror=()=>rej(t.error)})}
+async function get(k){if(idb)try{return await tx('readonly',s=>s.get(k))}catch(e){}return mem.get(k)}
+async function put(k,v){mem.set(k,v);if(idb)try{await tx('readwrite',s=>s.put(v,k))}catch(e){toast('Could not save — phone storage full?')}}
+async function del(k){mem.delete(k);if(idb)try{await tx('readwrite',s=>s.delete(k))}catch(e){}}
+async function allKeys(){if(idb)try{return await tx('readonly',s=>s.getAllKeys())}catch(e){}return[...mem.keys()]}
+const timers={};
+function save(what){clearTimeout(timers[what]);timers[what]=setTimeout(()=>{delete timers[what];put(what,S[what])},300)}
+async function flush(){for(const w of Object.keys(timers)){clearTimeout(timers[w]);delete timers[w];await put(w,S[w])}}
+const saveAll=()=>{save('stock');save('customers');save('jobs');save('docs');save('settings')};
+async function photo(id){if(!S.pc[id])S.pc[id]=await get('p:'+id);return S.pc[id]}
+
+/* ---------- photos ---------- */
+function shrink(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();
+ im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.72))};
+ im.onerror=()=>{URL.revokeObjectURL(u);rej()};im.src=u})}
+
+/* ---------- navigation ---------- */
+function go(view,id=null,push=true){if(push&&(S.view!==view||S.id!==id))try{history.pushState({view,id},'')}catch(e){}S.view=view;S.id=id;document.querySelector('.ov')?.remove();render();window.scrollTo(0,0)}
+addEventListener('popstate',e=>{const s=e.state||{view:'jobs',id:null};go(s.view,s.id,false)});
+try{history.replaceState({view:'jobs',id:null},'')}catch(e){}
+function render(){
+ const tab=S.view==='job'||S.view==='jobs'||S.view==='jobcard'?'jobs':S.view==='settings'?'settings':S.view==='custs'||S.view==='cust'?'custs':S.view==='stock'||S.view==='part'?'stock':'docs';
+ document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+ if(S.view==='jobs')main.innerHTML=jobsView(),drawList();
+ else if(S.view==='job')jobView();
+ else if(S.view==='docs')main.innerHTML=docsView();
+ else if(S.view==='doc')docView();
+ else if(S.view==='jobcard')jobcardView();
+ else if(S.view==='settings')main.innerHTML=settingsView();
+ else if(S.view==='custs')main.innerHTML=custsView(),drawCusts();
+ else if(S.view==='cust')custView();
+ else if(S.view==='stock')main.innerHTML=stockView(),drawStock();
+ else if(S.view==='part')partView();
+}
+
+/* ---------- job list ---------- */
+function jobsView(){return `<div class="top"><h1>Job cards</h1><button class="btn sky" data-act="new">+ New job</button></div>
+ <input type="search" id="q" placeholder="Search customer, job no. or site" value="${esc(S.q)}">
+ <div class="chips">${['All',...STATUS].map(s=>`<button class="chip ${S.filter===s?'on':''}" data-act="filter" data-v="${s}">${s}</button>`).join('')}</div>
+ <div id="list"></div>`}
+function drawList(){
+ const q=S.q.toLowerCase().trim();
+ const list=S.jobs.filter(j=>(S.filter==='All'||j.status===S.filter)&&(!q||[j.no,j.cust,j.subject,j.phone,j.address,j.po].join(' ').toLowerCase().includes(q))).sort((a,b)=>(b.date+b.no).localeCompare(a.date+a.no));
+ const el=document.getElementById('list');if(!el)return;
+ el.innerHTML=list.length?list.map(j=>`<button class="row" data-act="open" data-id="${j.id}">
+  <div><div class="no">${esc(j.no)} · ${fdate(j.date)}${j.photos?.length?` · ${j.photos.length} photo${j.photos.length>1?'s':''}`:''}</div><div class="who">${esc(j.cust||'No customer yet')}</div><div class="sub">${esc(j.subject||j.problem||'—')}</div></div>
+  <div class="rt"><span class="st ${cls(j.status)}">${j.status}</span><span class="amt">R${money(total(j.items))}</span></div></button>`).join('')
+ :S.jobs.length?`<p class="empty">No jobs match.</p>`:`<div class="empty"><img src="${ICON}" alt=""><h2>No job cards yet</h2><p>Tap <b>+ New job</b> when you get a call-out.<br>Add photos, the work done and the parts, then turn it into a quote or invoice.</p><button class="btn ghost" data-act="example">Load an example job</button></div>`}
+
+/* ---------- job card editor ---------- */
+const F=(label,f,v,type='text',extra='')=>`<label class="f">${label}<input type="${type}" data-f="${f}" value="${esc(v)}" ${extra}></label>`;
+const T=(label,f,v,ph='')=>`<label class="f">${label}<textarea data-f="${f}" placeholder="${esc(ph)}">${esc(v)}</textarea></label>`;
+const grpOpts=g=>(S.settings.markups||[]).map(m=>`<option value="${m.id}" ${m.id===g?'selected':''}>${esc(m.name)} +${num(m.pct)}%</option>`).join('');
+function itemHTML(it,i){return `<div class="item" data-i="${i}">
+ <div class="r1"><input data-it="code" list="codes" placeholder="Code" value="${esc(it.code)}" aria-label="Item code"><input data-it="title" list="parts" placeholder="Part or labour" value="${esc(it.title)}" aria-label="Item"></div>
+ <textarea data-it="desc" placeholder="Details (optional)" aria-label="Details">${esc(it.desc)}</textarea>
+ <div class="r2"><input data-it="qty" inputmode="decimal" value="${esc(it.qty)}" aria-label="Qty" placeholder="Qty"><input data-it="unit" value="${esc(it.unit)}" placeholder="Unit" aria-label="Unit"><select data-it="grp" aria-label="Markup type">${grpOpts(it.grp||'parts')}</select></div>
+ <div class="r4"><label>Cost price<input data-it="cost" inputmode="decimal" value="${esc(it.cost)}" placeholder="R you paid"></label><label>Selling price<input data-it="rate" inputmode="decimal" value="${esc(it.rate)}" placeholder="R each"></label></div>
+ <div class="r3"><span class="amt" data-amt>R${money(num(it.qty)*num(it.rate))}</span><button class="lnk" data-act="delitem" data-i="${i}">Remove</button></div></div>`}
+const mk=g=>num(((S.settings.markups||[]).find(m=>m.id===g)||{pct:0}).pct);
+const sell=(cost,g)=>Math.round(num(cost)*(1+mk(g)/100)*100)/100;
+const norm=s=>String(s||'').trim().toLowerCase();
+function findPart(code,title){return (code&&S.stock.find(s=>norm(s.code)===norm(code)))||(title&&S.stock.find(s=>norm(s.name)===norm(title)))}
+function toStock(it){if(!it.title?.trim()&&!it.code?.trim())return;let s=findPart(it.code,it.title),isNew=!s;
+ if(!s){s={id:uid(),code:'',name:'',desc:'',unit:'',grp:'parts',cost:'',rate:'',manual:false,added:today()};S.stock.push(s)}
+ Object.assign(s,{code:it.code?.trim()||s.code,name:it.title?.trim()||s.name,desc:it.desc||s.desc,unit:it.unit||s.unit,grp:it.grp||s.grp,cost:it.cost!==''&&it.cost!=null?it.cost:s.cost,rate:it.rate!==''&&it.rate!=null?it.rate:s.rate,updated:today()});
+ s.manual=!(num(s.cost)&&Math.abs(sell(s.cost,s.grp)-num(s.rate))<.01);
+ save('stock');if(isNew)toast(`${s.name||s.code} added to stock list`)}
+function fillFromStock(it,s){Object.assign(it,{code:s.code,title:s.name,desc:s.desc,unit:s.unit,grp:s.grp,cost:s.cost,rate:s.rate})}
+function jobView(){
+ const j=job(S.id);if(!j)return go('jobs');
+ const docs=S.docs.filter(d=>d.jobId===j.id);
+ main.innerHTML=`<button class="back" data-act="tab" data-v="jobs">‹ All jobs</button>
+ <div class="top"><h1>${esc(j.no)}</h1><select data-f="status" style="width:auto;margin:0">${STATUS.map(s=>`<option ${s===j.status?'selected':''}>${s}</option>`).join('')}</select></div>
+ <div class="card"><div class="top" style="margin:0 0 8px"><h2 style="margin:0">Customer</h2><button class="btn ghost sm" data-act="pickcust">Choose saved customer</button></div>
+  <label class="f">Name<input data-f="cust" list="custs" value="${esc(j.cust)}" placeholder="Type a new name or choose one" autocomplete="off"></label>
+  <p class="mute" id="custnote" style="margin:-4px 0 10px">${j.custId&&cust(j.custId)?'Saved customer — changes here update their details too.':'A new name is saved to your customer list automatically.'}</p>
+  <div class="grid2">${F('Phone','phone',j.phone,'tel')}${F('Email','email',j.email,'email')}</div>
+  ${T('Address','address',j.address)}
+ </div>
+ <div class="card"><h2>The job</h2>
+  <div class="grid2">${F('Date','date',j.date,'date')}${F('Order / P.O. no.','po',j.po)}</div>
+  ${F('Site / subject','subject',j.subject,'text','placeholder="e.g. Unit 4 geyser"')}
+  ${T('Problem reported','problem',j.problem,'What did the client call about?')}
+  ${T('Work done','work',j.work,'What did you do?')}
+ </div>
+ <div class="card"><h2>Photos</h2><div class="photos" id="photos">${(j.photos||[]).map(p=>`<button class="ph" data-act="viewph" data-p="${p}"><img data-src="${p}" alt="Job photo"></button>`).join('')}
+  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo<input type="file" accept="image/*" capture="environment" class="phin"></label>
+  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>From gallery<input type="file" accept="image/*" multiple class="phin"></label></div></div>
+ <div class="card"><h2>Parts &amp; labour</h2><div id="items">${(j.items||[]).map(itemHTML).join('')}</div>
+  <div class="grid2"><button class="btn sky sm" data-act="pickpart">+ From stock list</button><button class="btn ghost sm" data-act="additem">+ New line</button></div>
+  <p class="mute" style="margin:8px 0 0">New parts are saved to the stock list with their price. Enter the cost price and the markup is added for you.</p>
+  <div class="tot"><span>Total</span><b id="jtot">R${money(total(j.items))}</b></div></div>
+ <div class="card"><h2>Paperwork</h2><div class="acts">
+  <button class="btn" data-act="mkdoc" data-v="quote">Make quote</button>
+  <button class="btn sky" data-act="mkdoc" data-v="invoice">Make invoice</button>
+  <button class="btn ghost" data-act="jobcard">View / print job card</button></div>
+  ${docs.length?`<div style="margin-top:14px">${docs.map(docRow).join('')}</div>`:''}</div>
+ <button class="btn ghost" data-act="deljob" style="width:100%;color:#c0392b">Delete job card</button>
+ <datalist id="custs">${S.customers.map(c=>`<option value="${esc(c.name)}">`).join('')}</datalist>
+ <datalist id="codes">${S.stock.filter(s=>s.code).map(s=>`<option value="${esc(s.code)}">${esc(s.name)}</option>`).join('')}</datalist>
+ <datalist id="parts">${S.stock.filter(s=>s.name).map(s=>`<option value="${esc(s.name)}">`).join('')}</datalist>`;
+ loadThumbs();
+}
+async function loadThumbs(){for(const im of main.querySelectorAll('img[data-src]')){const d=await photo(im.dataset.src);if(d)im.src=d}}
+function newJob(data={}){const s=S.settings;const j={id:uid(),no:s.jcPrefix+String(s.jcNext++).padStart(4,'0'),date:today(),status:'New',cust:'',phone:'',email:'',address:'',subject:'',po:'',problem:'',work:'',photos:[],items:[{code:'',title:'',desc:'',qty:'1',unit:'',grp:'parts',cost:'',rate:''}],...data};S.jobs.push(j);saveAll();return j}
+
+/* ---------- quotes & invoices ---------- */
+function snap(j){return{cust:{name:j.cust,address:j.address,phone:j.phone,email:j.email},subject:j.subject||j.cust,po:j.po,items:clone((j.items||[]).filter(i=>i.code||i.title||i.desc||num(i.rate)))}}
+function makeDoc(type,src){const s=S.settings,t=today();
+ const no=type==='invoice'?s.invPrefix+(s.invNext++):s.qtPrefix+String(s.qtNext++).padStart(6,'0');
+ const d={id:uid(),type,no,jobId:src.jobId||src.id,date:t,terms:type==='invoice'?s.payTerms:'',due:type==='invoice'?t:addDays(t,+s.quoteDays||14),status:type==='invoice'?'Unpaid':'Draft',...(src.type?{cust:clone(src.cust),subject:src.subject,po:src.po,items:clone(src.items)}:snap(src))};
+ S.docs.push(d);const j=job(d.jobId);if(j&&!['Invoiced','Paid'].includes(j.status))j.status=type==='invoice'?'Invoiced':'Quoted';saveAll();return d}
+function docRow(d){return `<button class="row" data-act="opendoc" data-id="${d.id}"><div><div class="no">${d.type==='invoice'?'Invoice':'Quote'} · ${fdate(d.date)}</div><div class="who">${esc(d.no)}</div><div class="sub">${esc(d.cust.name||'—')}</div></div><div class="rt"><span class="st ${cls(d.status)}">${d.status}</span><span class="amt">R${money(total(d.items))}</span></div></button>`}
+function docsView(){
+ const inv=S.docs.filter(d=>d.type==='invoice'),unpaid=inv.filter(d=>d.status!=='Paid');
+ const month=today().slice(0,7),paidM=inv.filter(d=>d.status==='Paid'&&(d.paidOn||d.date).startsWith(month));
+ const list=S.docs.filter(d=>d.type===S.dfilter).sort((a,b)=>(b.date+b.no).localeCompare(a.date+a.no));
+ return `<div class="top"><h1>Quotes &amp; invoices</h1></div>
+ <div class="stat"><div><span>Owed to you</span><b>R${money(unpaid.reduce((a,d)=>a+total(d.items),0))}</b><span>${unpaid.length} unpaid</span></div><div style="background:#1e8e4f"><span>Paid this month</span><b>R${money(paidM.reduce((a,d)=>a+total(d.items),0))}</b><span>${paidM.length} invoice${paidM.length===1?'':'s'}</span></div></div>
+ <div class="chips"><button class="chip ${S.dfilter==='invoice'?'on':''}" data-act="dfilter" data-v="invoice">Invoices</button><button class="chip ${S.dfilter==='quote'?'on':''}" data-act="dfilter" data-v="quote">Quotes</button></div>
+ ${list.length?list.map(docRow).join(''):`<p class="empty">No ${S.dfilter}s yet.<br>Open a job card and tap <b>Make ${S.dfilter}</b>.</p>`}`}
+const lines=s=>esc(s).split('\n').filter(x=>x.trim()).join('<br>');
+function paperDoc(d){const s=S.settings,inv=d.type==='invoice',sub=total(d.items),paid=inv&&d.status==='Paid';
+ const bal=paid?0:sub;
+ const meta=inv?[['Invoice Date',fdate(d.date)],['Terms',d.terms],['Due Date',fdate(d.due)],['P.O.#',d.po]]:[['Quote Date',fdate(d.date)],['Expiry Date',fdate(d.due)],['P.O.#',d.po]];
+ return `<div class="paper"><div class="p-top"><div class="p-logo"><img src="${LOGO}" alt="FloPro Plumbing"></div>
+ <div class="p-title"><div class="p-h">${inv?'Invoice':'Quote'}</div><div class="p-no"># ${esc(d.no)}</div>
+ <div class="p-bl">${inv?'Balance Due':'Total'}</div><div class="p-bal">R${money(inv?bal:sub)}</div>${paid?'<div class="p-stamp">PAID</div>':''}</div></div>
+ <div class="p-co"><b>${esc(s.name)}</b><br>${lines(s.addr)}<br>${esc(s.phone)}${s.email?'<br>'+esc(s.email):''}</div>
+ <div class="p-mid"><div class="p-to"><div class="bt">${inv?'Bill To':'Quote For'}</div><b>${esc(d.cust.name)}</b>${d.cust.address?'<br>'+lines(d.cust.address):''}${d.cust.phone?'<br>'+esc(d.cust.phone):''}</div>
+ <table class="p-meta">${meta.filter(m=>m[1]).map(m=>`<tr><td>${m[0]} :</td><td>${esc(m[1])}</td></tr>`).join('')}</table></div>
+ ${d.subject?`<div class="p-sub">Subject :<br>${esc(d.subject)}</div>`:''}
+ <table class="p-items"><thead><tr><th style="width:34px">#</th><th>Description</th><th class="n" style="width:80px">Qty</th><th class="n" style="width:90px">Rate</th><th class="n" style="width:100px">Amount</th></tr></thead>
+ <tbody>${d.items.map((i,k)=>`<tr><td>${k+1}</td><td>${i.code?esc(i.code)+'<br>':''}${i.code?`<span class="d">${esc(i.title)}</span>`:esc(i.title)}${i.desc?`<div class="d">${esc(i.desc)}</div>`:''}</td><td class="n">${num(i.qty).toFixed(2)}${i.unit?`<div class="u">${esc(i.unit)}</div>`:''}</td><td class="n">${money(i.rate)}</td><td class="n">${money(num(i.qty)*num(i.rate))}</td></tr>`).join('')}</tbody></table>
+ <div class="p-tot"><div><span>Sub Total</span><span>${money(sub)}</span></div><div class="b"><span>Total</span><span>R${money(sub)}</span></div>
+ ${inv?`${paid?`<div><span>Payment Made</span><span style="color:#c0392b">(-) ${money(sub)}</span></div>`:''}<div class="hl"><span>Balance Due</span><span>R${money(bal)}</span></div>`:''}</div>
+ <div class="p-notes">${esc(s.notes)}</div><div class="p-terms">${esc(s.terms)}</div>
+ <div class="p-foot">${esc(s.legal)}\n${esc(s.bank)}</div></div>`}
+function fitPaper(){const w=main.querySelector('.pwrap');if(!w)return;const p=w.firstElementChild,k=w.clientWidth/794;p.style.transform=`scale(${k})`;w.style.height=p.offsetHeight*k+'px'}
+new ResizeObserver(fitPaper).observe(main);
+function waText(d){const s=S.settings,inv=d.type==='invoice';return `${s.name}\n${inv?'Invoice':'Quote'} ${d.no} for ${d.cust.name}\n${d.subject?d.subject+'\n':''}Total: R${money(total(d.items))}${inv?`\nDue: ${fdate(d.due)}\n\n${s.bank}\nReference: ${d.no}`:`\nValid until: ${fdate(d.due)}`}`}
+function docView(){
+ const d=doc(S.id);if(!d)return go('docs');const inv=d.type==='invoice',j=job(d.jobId);
+ const sts=inv?['Unpaid','Paid']:['Draft','Sent','Accepted','Declined'];
+ main.innerHTML=`<button class="back" data-act="${j?'open':'tab'}" data-id="${j?.id||''}" data-v="docs">‹ ${j?'Back to '+esc(j.no):'All documents'}</button>
+ <div class="top"><h1>${inv?'Invoice':'Quote'} ${esc(d.no)}</h1></div>
+ <div class="chips">${sts.map(s=>`<button class="chip ${d.status===s?'on':''}" data-act="dstatus" data-v="${s}">${s}</button>`).join('')}</div>
+ <div class="acts" style="margin-bottom:14px"><button class="btn sky" data-act="print">Save PDF / print</button>
+  <a class="btn green" href="https://wa.me/?text=${encodeURIComponent(waText(d))}" target="_blank" rel="noopener">Send summary on WhatsApp</a>
+  <p class="mute" id="pnote" style="margin:0">Tip: on the print screen choose <b>Save as PDF</b>, then share the PDF to the client on WhatsApp or email.</p></div>
+ <div class="pwrap" id="paperHost">${paperDoc(d)}</div>
+ <div class="card"><h2>Details</h2>
+  <div class="grid2"><label class="f">${inv?'Invoice':'Quote'} date<input type="date" data-d="date" value="${d.date}"></label><label class="f">${inv?'Due':'Expiry'} date<input type="date" data-d="due" value="${d.due}"></label></div>
+  ${inv?`<label class="f">Terms<input data-d="terms" value="${esc(d.terms)}"></label>`:''}
+  <label class="f">P.O. #<input data-d="po" value="${esc(d.po)}"></label><label class="f">Subject<input data-d="subject" value="${esc(d.subject)}"></label>
+  <div class="acts">${j?`<button class="btn ghost" data-act="refresh">Update lines from job card</button>`:''}${!inv?`<button class="btn" data-act="toinv">Turn quote into invoice</button>`:''}
+  <button class="btn ghost" data-act="deldoc" style="color:#c0392b">Delete ${inv?'invoice':'quote'}</button></div>
+  <p class="mute">To change prices or lines, edit the job card and tap “Update lines from job card”.</p></div>`;
+ requestAnimationFrame(fitPaper);
+}
+async function jobcardView(){
+ const j=job(S.id);if(!j)return go('jobs');const s=S.settings;
+ const imgs=[];for(const p of j.photos||[]){const d=await photo(p);if(d)imgs.push(d)}
+ const items=(j.items||[]).filter(i=>i.code||i.title||i.desc);
+ const html=`<div class="paper"><div class="p-top"><div class="p-logo"><img src="${LOGO}" alt="FloPro Plumbing"></div>
+ <div class="p-title"><div class="p-h">Job Card</div><div class="p-no"># ${esc(j.no)}</div><div class="p-bl">Status</div><div class="p-bal">${esc(j.status)}</div></div></div>
+ <div class="p-co"><b>${esc(s.name)}</b><br>${lines(s.addr)}<br>${esc(s.phone)}</div>
+ <div class="p-mid"><div class="p-to"><div class="bt">Customer</div><b>${esc(j.cust)}</b>${j.address?'<br>'+lines(j.address):''}${j.phone?'<br>'+esc(j.phone):''}</div>
+ <table class="p-meta"><tr><td>Date :</td><td>${fdate(j.date)}</td></tr>${j.po?`<tr><td>P.O.# :</td><td>${esc(j.po)}</td></tr>`:''}${j.subject?`<tr><td>Site :</td><td>${esc(j.subject)}</td></tr>`:''}</table></div>
+ <div class="p-sec"><h4>Problem reported</h4><div>${esc(j.problem)}</div></div>
+ <div class="p-sec"><h4>Work done</h4><div>${esc(j.work)}</div></div>
+ ${items.length?`<table class="p-items"><thead><tr><th style="width:34px">#</th><th>Parts &amp; labour</th><th class="n" style="width:90px">Qty</th></tr></thead><tbody>${items.map((i,k)=>`<tr><td>${k+1}</td><td>${esc([i.code,i.title].filter(Boolean).join(' — '))}${i.desc?`<div class="d">${esc(i.desc)}</div>`:''}</td><td class="n">${num(i.qty)} ${esc(i.unit)}</td></tr>`).join('')}</tbody></table>`:''}
+ ${imgs.length?`<div class="p-sec"><h4>Photos</h4><div class="p-ph">${imgs.map(u=>`<img src="${u}" alt="">`).join('')}</div></div>`:''}
+ <div class="p-sig"><div>Technician</div><div>Client name &amp; signature</div><div>Date</div></div>
+ <div class="p-foot">${esc(s.legal)}</div></div>`;
+ main.innerHTML=`<button class="back" data-act="open" data-id="${j.id}">‹ Back to ${esc(j.no)}</button>
+ <div class="acts" style="margin-bottom:14px"><button class="btn sky" data-act="print">Save PDF / print job card</button></div>
+ <div class="pwrap">${html}</div>`;requestAnimationFrame(fitPaper);
+}
+function doPrint(){const p=main.querySelector('.paper');if(!p)return;document.getElementById('printHost').innerHTML=p.outerHTML;
+ document.getElementById('printHost').firstElementChild.style.transform='none';
+ const nat=native();if(nat){const d=doc(S.id),j=job(S.id);nat.print({title:d?`${d.type==='invoice'?'Invoice':'Quote'} ${d.no}`:j?`Job card ${j.no}`:'FloPro Plumbing'}).catch(()=>toast('Could not open print'));return}
+ let ok=true;try{window.print()}catch(e){ok=false}
+ if(!ok||window.self!==window.top){const n=document.getElementById('pnote');toast('If nothing opened: open the app in its own browser tab to print')}}
+
+/* ---------- customers ---------- */
+function custStats(c){const jobs=S.jobs.filter(j=>j.custId===c.id),owed=S.docs.filter(d=>d.type==='invoice'&&d.status!=='Paid'&&jobs.some(j=>j.id===d.jobId)).reduce((a,d)=>a+total(d.items),0);return{jobs,owed}}
+function custsView(){return `<div class="top"><h1>Customers</h1><button class="btn sky" data-act="newcust">+ New customer</button></div>
+ <input type="search" id="cq" placeholder="Search name, phone or address" value="${esc(S.cq)}"><div id="clist"></div>`}
+function drawCusts(){const q=S.cq.toLowerCase().trim(),el=document.getElementById('clist');if(!el)return;
+ const list=S.customers.filter(c=>!q||[c.name,c.phone,c.email,c.address].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+ el.innerHTML=list.length?list.map(c=>{const s=custStats(c);return `<button class="row" data-act="opencust" data-id="${c.id}"><div><div class="who">${esc(c.name)}</div><div class="sub">${esc([c.phone,c.address.split('\n')[0]].filter(Boolean).join(' · ')||'No contact details yet')}</div></div>
+  <div class="rt"><span class="mute">${s.jobs.length} job${s.jobs.length===1?'':'s'}</span>${s.owed?`<span class="st Unpaid">Owes R${money(s.owed)}</span>`:''}</div></button>`}).join('')
+ :`<p class="empty">${S.customers.length?'No customers match.':'No customers yet.<br>Add one here, or just type a new name on a job card — it gets saved automatically.'}</p>`}
+function custView(){const c=cust(S.id);if(!c)return go('custs');const s=custStats(c);
+ const C=(l,k,type='text')=>`<label class="f">${l}<input type="${type}" data-c="${k}" value="${esc(c[k])}"></label>`;
+ main.innerHTML=`<button class="back" data-act="tab" data-v="custs">‹ All customers</button>
+ <div class="top"><h1>${esc(c.name||'New customer')}</h1></div>
+ ${s.owed?`<div class="stat"><div><span>Still owes</span><b>R${money(s.owed)}</b></div></div>`:''}
+ <div class="card"><h2>Details</h2>${C('Name','name')}<div class="grid2">${C('Phone','phone','tel')}${C('Email','email','email')}</div>
+  <label class="f">Address<textarea data-c="address">${esc(c.address)}</textarea></label><label class="f">Notes (gate code, contact person…)<textarea data-c="notes">${esc(c.notes)}</textarea></label>
+  ${c.phone?`<div class="grid2"><a class="btn ghost sm" href="tel:${esc(c.phone.replace(/\s/g,''))}">Call ${esc(c.phone)}</a><a class="btn green sm" href="https://wa.me/${esc(c.phone.replace(/\D/g,'').replace(/^0/,'27'))}" target="_blank" rel="noopener">WhatsApp</a></div>`:''}</div>
+ <button class="btn sky" data-act="custjob" style="width:100%;margin-bottom:14px">+ New job for ${esc(c.name||'this customer')}</button>
+ <div class="card"><h2>Jobs</h2>${s.jobs.length?s.jobs.sort((a,b)=>b.date.localeCompare(a.date)).map(j=>`<button class="row" data-act="open" data-id="${j.id}"><div><div class="no">${esc(j.no)} · ${fdate(j.date)}</div><div class="sub">${esc(j.subject||j.problem||'—')}</div></div><div class="rt"><span class="st ${cls(j.status)}">${j.status}</span><span class="amt">R${money(total(j.items))}</span></div></button>`).join(''):'<p class="mute">No jobs yet.</p>'}</div>
+ <button class="btn ghost" data-act="delcust" style="width:100%;color:#c0392b">Delete customer</button>`}
+function picker(j){const ov=document.createElement('div');ov.className='ov';ov.style.justifyContent='flex-start';
+ const draw=q=>{q=q.toLowerCase();return S.customers.filter(c=>!q||[c.name,c.phone,c.address].join(' ').toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<button class="row" data-pick="${c.id}"><div><div class="who">${esc(c.name)}</div><div class="sub">${esc(c.phone||c.address.split('\n')[0]||'')}</div></div></button>`).join('')||'<p class="empty" style="color:#fff">No saved customers.</p>'};
+ ov.innerHTML=`<div style="width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;max-height:100%;padding-top:env(safe-area-inset-top)"><div style="display:flex;gap:10px"><input type="search" placeholder="Search customers" style="margin:0"><button class="btn ghost" style="color:#fff;border-color:#fff" data-x="close">Close</button></div><div class="pl" style="overflow:auto">${draw('')}</div></div>`;
+ document.body.append(ov);const inp=ov.querySelector('input');inp.addEventListener('input',()=>ov.querySelector('.pl').innerHTML=draw(inp.value));
+ ov.addEventListener('click',e=>{const b=e.target.closest('[data-pick]');if(b){linkCust(j,cust(b.dataset.pick));ov.remove();jobView();toast('Customer filled in')}else if(e.target.dataset.x==='close'||e.target===ov)ov.remove()})}
+
+/* ---------- stock list & markups ---------- */
+const grpName=g=>((S.settings.markups||[]).find(m=>m.id===g)||{name:'—'}).name;
+function stockView(){const ms=S.settings.markups||[];return `<div class="top"><h1>Stock &amp; prices</h1><button class="btn sky" data-act="newpart">+ New item</button></div>
+ <div class="card"><h2>Markups</h2><p class="mute" style="margin-top:-6px">Added on top of the cost price to give the selling price.</p>
+  ${ms.map(m=>`<div class="mkrow" data-mid="${m.id}"><input data-m="name" value="${esc(m.name)}" aria-label="Markup name"><div class="pct"><input data-m="pct" inputmode="decimal" value="${esc(m.pct)}" aria-label="Markup percent"><span>%</span></div><button class="lnk" data-act="delmk" data-id="${m.id}">Delete</button></div>`).join('')}
+  <div class="grid2" style="margin-top:6px"><button class="btn ghost sm" data-act="addmk">+ Add markup</button><button class="btn sm" data-act="applymk">Update stock prices</button></div>
+  <p class="mute" style="margin:8px 0 0">“Update stock prices” works out every selling price again from its cost. Prices you typed in yourself are left alone.</p></div>
+ <input type="search" id="sq" placeholder="Search parts, codes or labour" value="${esc(S.sq)}"><div id="slist"></div>`}
+function drawStock(){const q=norm(S.sq),el=document.getElementById('slist');if(!el)return;
+ const list=S.stock.filter(s=>!q||norm([s.code,s.name,s.desc].join(' ')).includes(q)).sort((a,b)=>(a.name||a.code).localeCompare(b.name||b.code));
+ el.innerHTML=list.length?list.map(s=>`<button class="row" data-act="openpart" data-id="${s.id}"><div><div class="no">${esc(s.code||'No code')} · ${esc(grpName(s.grp))}</div><div class="who">${esc(s.name||'Unnamed item')}</div><div class="sub">${num(s.cost)?`Cost R${money(s.cost)}`:'No cost price'}${s.unit?' · '+esc(s.unit):''}</div></div><div class="rt"><span class="amt">R${money(s.rate)}</span>${s.manual&&num(s.cost)?'<span class="mute">own price</span>':''}</div></button>`).join('')
+ :`<p class="empty">${S.stock.length?'Nothing matches.':'No stock yet.<br>Parts and labour you add on job cards are saved here automatically, with their prices.'}</p>`}
+function mkNote(s){if(!num(s.cost))return 'Enter a cost price and the markup works out the selling price.';const a=sell(s.cost,s.grp);
+ return s.manual?`Own price. With the ${esc(grpName(s.grp))} markup (${mk(s.grp)}%) it would be <b>R${money(a)}</b>. <button class="lnk" style="color:var(--sky)" data-act="usemk">Use markup</button>`:`Cost R${money(s.cost)} + ${mk(s.grp)}% = <b>R${money(a)}</b>`}
+function partView(){const s=S.stock.find(x=>x.id===S.id);if(!s)return go('stock');
+ const P=(l,k,type='text',x='')=>`<label class="f">${l}<input type="${type}" data-p="${k}" value="${esc(s[k])}" ${x}></label>`;
+ const used=S.jobs.filter(j=>(j.items||[]).some(i=>findPart(i.code,i.title)===s)).length;
+ main.innerHTML=`<button class="back" data-act="tab" data-v="stock">‹ Stock list</button><div class="top"><h1>${esc(s.name||'New item')}</h1></div>
+ <div class="card"><div class="grid2">${P('Code','code','text','placeholder="e.g. PLU001"')}${P('Unit','unit','text','placeholder="e.g. each, metre"')}</div>${P('Name','name')}
+  <label class="f">Details<textarea data-p="desc">${esc(s.desc)}</textarea></label>
+  <label class="f">Markup type<select data-p="grp">${grpOpts(s.grp)}</select></label>
+  <div class="grid2">${P('Cost price (R)','cost','text','inputmode="decimal"')}${P('Selling price (R)','rate','text','inputmode="decimal"')}</div>
+  <p class="mute" id="mknote" style="margin:0">${mkNote(s)}</p></div>
+ <p class="mute">Used on ${used} job card${used===1?'':'s'}. Changing the price here doesn’t change job cards already done.</p>
+ <button class="btn ghost" data-act="delpart" style="width:100%;color:#c0392b">Delete from stock list</button>`}
+function partPicker(j){const ov=document.createElement('div');ov.className='ov';ov.style.justifyContent='flex-start';
+ const draw=q=>{q=norm(q);return S.stock.filter(s=>!q||norm([s.code,s.name].join(' ')).includes(q)).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(s=>`<button class="row" data-pick="${s.id}"><div><div class="no">${esc(s.code||grpName(s.grp))}</div><div class="who">${esc(s.name)}</div></div><div class="rt"><span class="amt">R${money(s.rate)}</span></div></button>`).join('')||'<p class="empty" style="color:#fff">Nothing in the stock list yet.</p>'};
+ ov.innerHTML=`<div style="width:100%;max-width:560px;display:flex;flex-direction:column;gap:10px;max-height:100%;padding-top:env(safe-area-inset-top)"><div style="display:flex;gap:10px"><input type="search" placeholder="Search stock" style="margin:0"><button class="btn ghost" style="color:#fff;border-color:#fff" data-x="close">Close</button></div><div class="pl" style="overflow:auto">${draw('')}</div></div>`;
+ document.body.append(ov);const inp=ov.querySelector('input');inp.addEventListener('input',()=>ov.querySelector('.pl').innerHTML=draw(inp.value));
+ ov.addEventListener('click',e=>{const b=e.target.closest('[data-pick]');if(b){const s=S.stock.find(x=>x.id===b.dataset.pick),it={qty:'1'};fillFromStock(it,s);
+  const blank=j.items.findIndex(x=>!x.code&&!x.title&&!num(x.rate));if(blank>-1)j.items[blank]={...j.items[blank],...it};else j.items.push(it);save('jobs');ov.remove();jobView();toast(`${s.name} added`)}
+  else if(e.target.dataset.x==='close'||e.target===ov)ov.remove()})}
+function migrateStock(){const out=[];S.stock=out;for(const j of S.jobs)for(const it of j.items||[])toStock({grp:'parts',cost:'',...it});return S.stock}
+
+/* ---------- settings & backup ---------- */
+function settingsView(){const s=S.settings;const I=(l,k,t='text')=>`<label class="f">${l}<input type="${t}" data-s="${k}" value="${esc(s[k])}"></label>`,X=(l,k)=>`<label class="f">${l}<textarea data-s="${k}">${esc(s[k])}</textarea></label>`;
+ return `<div class="top"><h1>Settings</h1></div>
+ <div class="card"><h2>Business details</h2>${I('Business name','name')}${X('Address','addr')}<div class="grid2">${I('Phone','phone','tel')}${I('Email','email','email')}</div>${X('Footer (owner &amp; reg. no.)','legal')}${X('Bank details','bank')}</div>
+ <div class="card"><h2>Wording on quotes &amp; invoices</h2>${X('Notes','notes')}${X('Terms','terms')}<div class="grid2">${I('Invoice payment terms','payTerms')}${I('Quotes valid for (days)','quoteDays','number')}</div></div>
+ <div class="card"><h2>Numbering</h2><p class="mute">The next number to be used.</p>
+  <div class="grid2">${I('Invoice prefix','invPrefix')}${I('Next invoice no.','invNext','number')}${I('Quote prefix','qtPrefix')}${I('Next quote no.','qtNext','number')}${I('Job card prefix','jcPrefix')}${I('Next job card no.','jcNext','number')}</div></div>
+ <div class="card"><h2>Backup</h2><p class="mute">Everything is saved on this phone only. Make a backup every week or so and keep it on Google Drive or WhatsApp-to-self, so nothing is lost if the phone is lost.</p>
+  <div class="acts"><button class="btn" data-act="export">Make backup file</button><label class="btn ghost">Restore from backup<input type="file" accept=".json,application/json" id="imp" hidden></label></div></div>
+ <div class="card"><h2>App updates</h2><p class="mute">The app updates itself when you open it with internet. Your jobs, customers and invoices stay on the phone and are not touched by updates.</p><p class="mute">Version: <b>${BUILD.startsWith('__')?'preview':esc(BUILD)}</b></p><button class="btn ghost" data-act="chkupd">Check for updates now</button></div>
+ <div class="card"><h2>Put it on the home screen</h2><p class="mute" style="margin:0"><b>Android (Chrome):</b> ⋮ menu → <b>Add to Home screen</b>.<br><b>iPhone (Safari):</b> Share button → <b>Add to Home Screen</b>.</p></div>`}
+async function exportAll(){toast('Building backup…');const photos={};for(const j of S.jobs)for(const p of j.photos||[])photos[p]=await photo(p);
+ const blob=new Blob([JSON.stringify({app:'flopro',v:1,at:new Date().toISOString(),settings:S.settings,customers:S.customers,stock:S.stock,jobs:S.jobs,docs:S.docs,photos})],{type:'application/json'});
+ const name=`flopro-backup-${today()}.json`,file=new File([blob],name,{type:'application/json'});
+ const nat=native();if(nat){try{await nat.shareFile({name,mime:'application/json',text:await blob.text()})}catch(e){toast('Could not share the backup')}return}
+ try{if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e.name==='AbortError')return}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();toast('Backup saved to Downloads')}catch(e){toast('Could not save the file here')}}
+async function importAll(file){try{const o=JSON.parse(await file.text());if(o.app!=='flopro')throw 0;
+ for(const k of await allKeys())await del(k);S.pc={};
+ for(const [id,d] of Object.entries(o.photos||{}))if(d)await put('p:'+id,d);
+ S.settings={...DEF,...o.settings};S.jobs=o.jobs||[];S.docs=o.docs||[];S.customers=o.customers||migrate(S.jobs);S.stock=o.stock||migrateStock();await put('stock',S.stock);await put('customers',S.customers);await put('settings',S.settings);await put('jobs',S.jobs);await put('docs',S.docs);toast(`Restored ${S.jobs.length} job cards`);go('jobs')}catch(e){toast('That is not a FloPro backup file')}}
+
+/* ---------- events ---------- */
+const armed={};
+function twoTap(btn,key,label){if(armed[key]&&Date.now()-armed[key]<4000)return true;armed[key]=Date.now();btn.textContent=label;return false}
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go(b.dataset.tab)});
+main.addEventListener('click',async e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,j=job(S.id),d=doc(S.id);
+ if(a==='tab')go(b.dataset.v);
+ else if(a==='new')go('job',newJob().id);
+ else if(a==='example'){newJob({cust:'PALM COURT',subject:'PALM COURT',po:'PALM COURT',status:'Done',problem:'Monthly service — gutters and drop boxes blocked with leaves.',work:'Cleaned and cleared gutters and drop boxes.\nCleaned and cleared valleys.',items:[{code:'PLU001',title:'Monthly Service Contract',desc:'Clean and clear gutters and drop boxes.\nClean and clear valleys',qty:'1',unit:'PER UNIT',grp:'labour',cost:'',rate:'2800'}]});upsertFromJob(job(S.jobs.at(-1).id));S.jobs.at(-1).items.forEach(toStock);go('job',S.jobs.at(-1).id)}
+ else if(a==='filter'){S.filter=b.dataset.v;main.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b));drawList()}
+ else if(a==='open')go('job',b.dataset.id);
+ else if(a==='opendoc')go('doc',b.dataset.id);
+ else if(a==='dfilter'){S.dfilter=b.dataset.v;render()}
+ else if(a==='additem'){j.items.push({code:'',title:'',desc:'',qty:'1',unit:'',grp:'parts',cost:'',rate:''});save('jobs');document.getElementById('items').insertAdjacentHTML('beforeend',itemHTML(j.items.at(-1),j.items.length-1));document.querySelector('#items .item:last-child input').focus()}
+ else if(a==='delitem'){j.items.splice(+b.dataset.i,1);save('jobs');document.getElementById('items').innerHTML=j.items.map(itemHTML).join('');document.getElementById('jtot').textContent='R'+money(total(j.items))}
+ else if(a==='mkdoc'){if(!j.cust.trim()){toast('Add the customer name first');return}upsertFromJob(j);const nd=makeDoc(b.dataset.v,j);go('doc',nd.id)}
+ else if(a==='jobcard')go('jobcard',j.id);
+ else if(a==='deljob'){if(!twoTap(b,'j'+j.id,'Tap again to delete for good'))return;for(const p of j.photos||[])del('p:'+p);S.jobs=S.jobs.filter(x=>x!==j);save('jobs');toast('Job card deleted');go('jobs')}
+ else if(a==='viewph'){const src=await photo(b.dataset.p),ov=document.createElement('div');ov.className='ov';ov.innerHTML=`<img src="${src}" alt=""><div style="display:flex;gap:10px"><button class="btn red" data-x="del">Delete photo</button><button class="btn ghost" style="color:#fff" data-x="close">Close</button></div>`;document.body.append(ov);
+  ov.addEventListener('click',ev=>{const x=ev.target.dataset.x;if(x==='del'){if(!twoTap(ev.target,'p'+b.dataset.p,'Tap again to delete'))return;j.photos=j.photos.filter(p=>p!==b.dataset.p);del('p:'+b.dataset.p);save('jobs');ov.remove();jobView()}else if(x==='close'||ev.target===ov)ov.remove()})}
+ else if(a==='print')doPrint();
+ else if(a==='dstatus'){d.status=b.dataset.v;if(d.type==='invoice'){d.paidOn=d.status==='Paid'?today():null;const jj=job(d.jobId);if(jj)jj.status=d.status==='Paid'?'Paid':'Invoiced'}saveAll();docView()}
+ else if(a==='refresh'){Object.assign(d,snap(job(d.jobId)));save('docs');docView();toast('Updated from job card')}
+ else if(a==='toinv'){d.status='Accepted';const nd=makeDoc('invoice',d);go('doc',nd.id)}
+ else if(a==='deldoc'){if(!twoTap(b,'d'+d.id,'Tap again to delete for good'))return;S.docs=S.docs.filter(x=>x!==d);save('docs');go(d.jobId&&job(d.jobId)?'job':'docs',d.jobId)}
+ else if(a==='export')exportAll();
+ else if(a==='chkupd')checkUpdate(true);
+ else if(a==='newcust'){const c={id:uid(),name:'',phone:'',email:'',address:'',notes:'',added:today()};S.customers.push(c);save('customers');go('cust',c.id);main.querySelector('[data-c=name]').focus()}
+ else if(a==='opencust')go('cust',b.dataset.id);
+ else if(a==='custjob'){const c=cust(S.id);if(!c.name.trim()){toast('Give the customer a name first');return}const nj=newJob();linkCust(nj,c);go('job',nj.id)}
+ else if(a==='delcust'){const c=cust(S.id);if(!twoTap(b,'c'+c.id,'Tap again to delete (their jobs stay)'))return;S.customers=S.customers.filter(x=>x!==c);S.jobs.forEach(x=>{if(x.custId===c.id)delete x.custId});saveAll();go('custs')}
+ else if(a==='pickcust')picker(j);
+ else if(a==='pickpart')partPicker(j);
+ else if(a==='newpart'){const s={id:uid(),code:'',name:'',desc:'',unit:'',grp:'parts',cost:'',rate:'',manual:false,added:today()};S.stock.push(s);save('stock');go('part',s.id);main.querySelector('[data-p=name]').focus()}
+ else if(a==='openpart')go('part',b.dataset.id);
+ else if(a==='delpart'){const s=S.stock.find(x=>x.id===S.id);if(!twoTap(b,'s'+s.id,'Tap again to delete'))return;S.stock=S.stock.filter(x=>x!==s);save('stock');go('stock')}
+ else if(a==='usemk'){const s=S.stock.find(x=>x.id===S.id);s.rate=String(sell(s.cost,s.grp));s.manual=false;save('stock');partView()}
+ else if(a==='addmk'){S.settings.markups.push({id:uid(),name:'New type',pct:20});save('settings');render()}
+ else if(a==='delmk'){const id=b.dataset.id;if(S.settings.markups.length<2){toast('Keep at least one markup');return}if(!twoTap(b,'m'+id,'Tap again'))return;S.settings.markups=S.settings.markups.filter(m=>m.id!==id);const f=S.settings.markups[0].id;S.stock.forEach(s=>{if(s.grp===id)s.grp=f});saveAll();render()}
+ else if(a==='applymk'){let n=0;S.stock.forEach(s=>{if(num(s.cost)&&!s.manual){s.rate=String(sell(s.cost,s.grp));n++}});save('stock');drawStock();toast(`${n} selling price${n===1?'':'s'} updated`)}
+});
+main.addEventListener('input',e=>{const t=e.target,j=job(S.id),d=doc(S.id);
+ if(t.id==='q'){S.q=t.value;drawList()}
+ else if(t.dataset.f&&j){j[t.dataset.f]=t.value;save('jobs');const c=j.custId&&cust(j.custId);if(c&&CF.includes(t.dataset.f)){c[t.dataset.f]=t.value;save('customers')}}
+ else if(t.id==='cq'){S.cq=t.value;drawCusts()}
+ else if(t.id==='sq'){S.sq=t.value;drawStock()}
+ else if(t.dataset.m){const m=S.settings.markups.find(x=>x.id===t.closest('[data-mid]').dataset.mid);m[t.dataset.m]=t.dataset.m==='pct'?num(t.value):t.value;save('settings')}
+ else if(t.dataset.p){const s=S.stock.find(x=>x.id===S.id),f=t.dataset.p;s[f]=t.value;
+  if(f==='rate')s.manual=!(num(s.cost)&&Math.abs(sell(s.cost,s.grp)-num(s.rate))<.01);
+  if((f==='cost'||f==='grp')&&!s.manual&&num(s.cost)){s.rate=String(sell(s.cost,s.grp));main.querySelector('[data-p=rate]').value=s.rate}
+  const n=document.getElementById('mknote');if(n)n.innerHTML=mkNote(s);save('stock')}
+ else if(t.dataset.c){const c=cust(S.id);c[t.dataset.c]=t.value;save('customers');if(t.dataset.c==='name'){main.querySelector('h1').textContent=t.value||'New customer';S.jobs.forEach(x=>{if(x.custId===c.id){x.cust=t.value}});save('jobs')}}
+ else if(t.dataset.it&&j){const row=t.closest('.item'),i=+row.dataset.i,it=j.items[i],f=t.dataset.it;it[f]=t.value;
+  if(f==='rate')it.manualRate=t.value!=='';
+  if((f==='cost'||f==='grp')&&num(it.cost)&&!it.manualRate){it.rate=String(sell(it.cost,it.grp));row.querySelector('[data-it=rate]').value=it.rate}
+  t.closest('.item').querySelector('[data-amt]').textContent='R'+money(num(it.qty)*num(it.rate));document.getElementById('jtot').textContent='R'+money(total(j.items));save('jobs')}
+ else if(t.dataset.d&&d){d[t.dataset.d]=t.value;save('docs');document.getElementById('paperHost').innerHTML=paperDoc(d);fitPaper()}
+ else if(t.dataset.s){const k=t.dataset.s;S.settings[k]=t.type==='number'?num(t.value):t.value;save('settings')}
+});
+main.addEventListener('change',async e=>{const t=e.target,j=job(S.id);
+ if(t.classList.contains('phin')&&j){const files=[...t.files];if(!files.length)return;toast(`Adding ${files.length} photo${files.length>1?'s':''}…`);
+  for(const f of files){try{const data=await shrink(f),id=uid();await put('p:'+id,data);S.pc[id]=data;j.photos.push(id)}catch(err){toast('One photo could not be read')}}
+  save('jobs');jobView();}
+ else if(t.id==='imp'&&t.files[0])importAll(t.files[0]);
+ else if(t.dataset.f==='cust'&&j){const ex=byName(t.value);if(ex&&ex.id!==j.custId){linkCust(j,ex);for(const k of CF){const el=main.querySelector(`[data-f=${k}]`);if(el)el.value=j[k]}}else upsertFromJob(j);const n=document.getElementById('custnote');if(n)n.textContent='Saved customer — changes here update their details too.'}
+ else if(t.dataset.it&&j){const row=t.closest('.item'),i=+row.dataset.i,it=j.items[i],f=t.dataset.it;
+  if((f==='code'||f==='title')&&!num(it.rate)&&!num(it.cost)){const s=findPart(f==='code'?t.value:'',f==='title'?t.value:'');if(s){fillFromStock(it,s);it.manualRate=false;row.outerHTML=itemHTML(it,i);document.getElementById('jtot').textContent='R'+money(total(j.items));save('jobs');return}}
+  if(['code','title','cost','rate','grp','unit'].includes(f))toStock(it);save('jobs')}
+});
+
+/* ---------- auto update ---------- */
+const live=!BUILD.startsWith('__')&&(location.protocol==='https:'||location.hostname==='localhost')&&window.self===window.top;
+let swReg=null,updShown=false;
+async function checkUpdate(manual){
+ if(!live){if(manual)toast('Updates switch on once the app is opened from its website');return}
+ try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});const v=await r.json();
+  if(v.build&&v.build!==BUILD){const busy=['job','doc','cust','jobcard'].includes(S.view)||document.querySelector('.ov');if(busy||manual)showUpdate();else applyUpdate()}
+  else if(manual)toast('You have the latest version')}catch(e){if(manual)toast('No internet — try again later')}}
+function showUpdate(){if(updShown)return;updShown=true;const d=document.createElement('div');d.className='upd';d.innerHTML='<span>A new version of the app is ready.</span><button class="btn sm">Update now</button>';d.querySelector('button').onclick=applyUpdate;document.body.append(d)}
+async function applyUpdate(){toast('Updating…');await flush();try{if(swReg)await swReg.update();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()}
+if(live&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()});
+setInterval(()=>checkUpdate(),30*60*1000);
+addEventListener('pagehide',()=>{flush()});
+
+/* ---------- start ---------- */
+function migrate(jobs){const out=[];for(const j of jobs){if(!j.cust?.trim())continue;let c=out.find(x=>x.name.trim().toLowerCase()===j.cust.trim().toLowerCase());
+ if(!c){c={id:uid(),name:j.cust.trim(),phone:'',email:'',address:'',notes:'',added:j.date||today()};out.push(c)}for(const k of CF)if(!c[k]&&j[k])c[k]=j[k];j.custId=c.id}return out}
+(async()=>{await openDB();try{navigator.storage?.persist?.()}catch(e){}
+ S.settings={...DEF,...(await get('settings')||{})};S.jobs=await get('jobs')||[];S.docs=await get('docs')||[];S.customers=await get('customers')||migrate(S.jobs);S.stock=await get('stock')||migrateStock();save('stock');save('customers');save('jobs');render();checkUpdate()})();
+}
+</script>
+</body>
+</html>
