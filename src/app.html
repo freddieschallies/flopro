@@ -178,7 +178,7 @@ const DEF={name:'FLOPRO PLUMBING',addr:'LOT 20\nREGIA STREET KWAMBONAMBI',phone:
  notes:'FloPro Plumbing accepts no responsibility for any underground water mains, electrical or fiber lines not indicated on plans or neither by client whilst excavation is taking place.  COC  to be issued once payment received in full',
  terms:'Quote payable in full in order for works to be scheduled.\nErrors and omissions are excluded.\nOver and above works will be quoted for accordingly.\nThank you for your business.',
  invPrefix:'IN',invNext:100728,qtPrefix:'QT-',qtNext:1,jcPrefix:'JC',jcNext:1,payTerms:'Due on Receipt',quoteDays:14,kmRate:'',travelRate:'',
- markups:[{id:'parts',name:'Parts',pct:30},{id:'materials',name:'Materials',pct:25},{id:'labour',name:'Labour',pct:0}]};
+ markups:[{id:'parts',name:'Parts & materials',pct:30},{id:'labour',name:'Labour',pct:0}]};
 const S={settings:{...DEF},jobs:[],docs:[],customers:[],stock:[],sq:'',gq:'',cq:'',view:'jobs',id:null,q:'',filter:'All',dfilter:'invoice',pc:{}};
 const main=document.getElementById('main');
 
@@ -632,11 +632,16 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 setInterval(()=>checkUpdate(),30*60*1000);
 addEventListener('pagehide',()=>{flush()});
 
+/* one-off: Parts and Materials became one "Parts & materials" markup */
+function mergeMaterials(){const ms=S.settings.markups||[];if(!ms.some(m=>m.id==='materials'))return;
+ const p=ms.find(m=>m.id==='parts');if(p&&p.name==='Parts')p.name='Parts & materials';
+ S.settings.markups=ms.filter(m=>m.id!=='materials');if(!S.settings.markups.some(m=>m.id==='parts'))S.settings.markups.unshift({id:'parts',name:'Parts & materials',pct:30});
+ S.stock.forEach(s=>{if(s.grp==='materials')s.grp='parts'});S.jobs.forEach(j=>(j.items||[]).forEach(i=>{if(i.grp==='materials')i.grp='parts'}));saveAll()}
 /* ---------- start ---------- */
 function migrate(jobs){const out=[];for(const j of jobs){if(!j.cust?.trim())continue;let c=out.find(x=>x.name.trim().toLowerCase()===j.cust.trim().toLowerCase());
  if(!c){c={id:uid(),name:j.cust.trim(),phone:'',email:'',address:'',notes:'',added:j.date||today()};out.push(c)}for(const k of CF)if(!c[k]&&j[k])c[k]=j[k];j.custId=c.id}return out}
 (async()=>{await openDB();try{navigator.storage?.persist?.()}catch(e){}
- S.settings={...DEF,...(await get('settings')||{})};S.jobs=await get('jobs')||[];S.docs=await get('docs')||[];S.customers=await get('customers')||migrate(S.jobs);S.stock=await get('stock')||migrateStock();save('stock');save('customers');save('jobs');render();checkUpdate()})();
+ S.settings={...DEF,...(await get('settings')||{})};S.jobs=await get('jobs')||[];S.docs=await get('docs')||[];S.customers=await get('customers')||migrate(S.jobs);S.stock=await get('stock')||migrateStock();save('stock');mergeMaterials();save('customers');save('jobs');render();checkUpdate()})();
 }
 </script>
 </body>
